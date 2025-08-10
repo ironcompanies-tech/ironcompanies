@@ -15,9 +15,7 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: start;
       min-height: 100vh;
-      text-align: center;
       padding: 20px;
     }
 
@@ -78,32 +76,73 @@
       margin-top: 10px;
     }
 
-    textarea, pre {
-      width: 100%;
-      font-family: monospace;
-      background: #111;
-      color: #0ff;
-      border: 1px solid #00f7ff44;
-      border-radius: 10px;
-      padding: 10px;
-      box-shadow: 0 0 5px #00f7ff44;
-      margin-top: 10px;
-    }
-
     button {
       background: #00f7ff;
       color: #000;
-      border: none;
       padding: 10px 20px;
-      margin-top: 10px;
+      font-family: 'Orbitron', sans-serif;
+      border: none;
       border-radius: 10px;
-      font-weight: bold;
-      box-shadow: 0 0 10px #00f7ff99;
+      font-size: 1rem;
       cursor: pointer;
+      box-shadow: 0 0 10px #00f7ff;
     }
 
     button:hover {
-      background: #00aacc;
+      background: #00c4cc;
+    }
+
+    /* Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0,0,0,0.9);
+      padding-top: 60px;
+    }
+
+    .modal-content {
+      background: #111;
+      margin: auto;
+      padding: 20px;
+      border: 1px solid #00f7ff;
+      width: 80%;
+      color: #00f7ff;
+      box-shadow: 0 0 20px #00f7ff;
+      border-radius: 15px;
+    }
+
+    .close {
+      color: #aaa;
+      float: right;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    textarea {
+      width: 100%;
+      height: 150px;
+      background: #000;
+      color: #0ff;
+      border: 1px solid #0ff;
+      font-family: monospace;
+      padding: 10px;
+      font-size: 1rem;
+    }
+
+    .output {
+      background: #000;
+      border: 1px solid #0ff;
+      padding: 10px;
+      min-height: 50px;
+      margin-top: 10px;
+      white-space: pre-wrap;
     }
 
     footer {
@@ -121,53 +160,87 @@
   <div class="section">
     <h2>🚀 Technologies</h2>
     <ul>
-      <li><strong>🧠 Diety AI</strong> – A smart assistant that can think, remember, and help you control systems or programs like a real brain.</li>
+      <li><strong>🧠 Deity AI</strong> – A smart assistant that can think, remember, and help you control systems or programs like a real brain.</li>
       <li><strong>🕶️ Holographic AI</strong> – An AI designed to talk and interact like a real person, and one day, show up as a hologram.</li>
-      <li><strong>⚙️ Ironscript</strong> – Your own programming language made for speed and power. It’s how Iron Companies builds tools and AI.</li>
-      <li><strong>💽 Codex Obscura</strong> – A secret system that stores powerful code and hidden ideas for future inventions. Mysterious and locked down.</li>
-      <li><strong>🖥️ Iron OS</strong> – A futuristic operating system designed by Iron Companies to run custom tools, AI, and developer environments. Built to power innovation and control.</li>
+      <li><strong>⚙️ Ironscript</strong> – Your own programming language made for speed and power.</li>
+      <li><strong>💽 Codex Obscura</strong> – A secret system that stores powerful code and hidden ideas for future inventions.</li>
+      <li><strong>🖥️ Iron OS</strong> – A futuristic operating system designed by Iron Companies.</li>
     </ul>
+    <button id="learnBtn">📘 Learn Ironscript</button>
   </div>
 
   <div class="section">
-    <h2>📚 Learn Ironscript</h2>
-    <p>Ironscript is a powerful system programming language created for building AI, apps, and OS tools. Here’s a quick look:</p>
-    
-    <ul>
-      <li><strong>🔹 Variables:</strong> `let speed = 10`</li>
-      <li><strong>🔹 Input/Output:</strong> `ask "What is your name?"`</li>
-      <li><strong>🔹 Loops:</strong> `repeat 5 times { say "Hi" }`</li>
-      <li><strong>🔹 Functions:</strong> `func greet(name) { say "Hello " + name }`</li>
-      <li><strong>🔹 System Access:</strong> `run "camera.open"`</li>
-    </ul>
-
-    <textarea id="ironscriptInput" rows="6">// Write Ironscript code here...</textarea>
-    <button onclick="runIronscript()">▶️ Run</button>
-    <pre id="ironscriptOutput">// Output will show here...</pre>
+    <h2>💻 Ironscript Interpreter</h2>
+    <textarea id="ironscriptCode" placeholder="Type your Ironscript code here..."></textarea>
+    <button onclick="runIronscript()">Run</button>
+    <div class="output" id="output"></div>
   </div>
 
   <div class="section">
     <h2>💼 Join Iron Companies</h2>
-    <p>Join our mission to build the future. As a team member, you earn <strong>IRON Credits</strong> for helping with code, design, and ideas.</p>
-    <p>At the end of the year, IRON Credits are converted into real money and paid to all loyal members.</p>
-    <p>It’s not just a company — it’s a movement. Are you ready to build with us?</p>
+    <p>Join our mission to build the future. Earn <strong>IRON Credits</strong> for code, design, and ideas.</p>
     <a href="mailto:morrarth5656@gmail.com" class="join-link">📧 Join Iron Companies Now</a>
   </div>
 
   <footer>© 2025 Iron Companies. Built by Morris Arthur. All rights reserved.</footer>
 
-  <script>
-    function runIronscript() {
-      const input = document.getElementById("ironscriptInput").value;
-      const output = document.getElementById("ironscriptOutput");
+  <!-- Learn Ironscript Modal -->
+  <div id="learnModal" class="modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <h2>Ironscript Syntax</h2>
+      <pre>
+# Variables
+let x = 10
+let name = "Morris"
 
-      // Placeholder: Replace this logic with your real Ironscript interpreter
-      if (input.includes("say")) {
-        const message = input.match(/say\s+"([^"]+)"/);
-        output.textContent = message ? message[1] : "// No valid say command.";
-      } else {
-        output.textContent = "// Ironscript interpreter not fully connected.";
+# Functions
+func greet(name) {
+  print("Hello, " + name)
+}
+
+# Loops
+for i in range(1, 5) {
+  print(i)
+}
+
+# If statement
+if x > 5 {
+  print("x is big")
+} else {
+  print("x is small")
+}
+      </pre>
+    </div>
+  </div>
+
+  <script>
+    // Modal handling
+    const modal = document.getElementById("learnModal");
+    const btn = document.getElementById("learnBtn");
+    const span = document.getElementsByClassName("close")[0];
+
+    btn.onclick = () => modal.style.display = "block";
+    span.onclick = () => modal.style.display = "none";
+    window.onclick = (event) => { if (event.target == modal) modal.style.display = "none"; }
+
+    // Simple Ironscript Interpreter Simulation
+    function runIronscript() {
+      const code = document.getElementById("ironscriptCode").value;
+      let output = "";
+      try {
+        // Minimal parser (replace with real Ironscript logic)
+        if (code.includes("print")) {
+          output = code.match(/print\((.*?)\)/g)
+            .map(line => line.replace(/print\(|\)/g, ""))
+            .join("\n");
+        } else {
+          output = "Code executed (simulation)";
+        }
+      } catch (err) {
+        output = "Error: " + err.message;
       }
+      document.getElementById("output").innerText = output;
     }
   </script>
 </body>
