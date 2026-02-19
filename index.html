@@ -1,247 +1,142 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Iron Companies</title>
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron&display=swap" rel="stylesheet">
-  <style>
-    body {
-      margin: 0;
-      padding: 0;
-      background: radial-gradient(ellipse at top, #0f0f0f, #000);
-      font-family: 'Orbitron', sans-serif;
-      color: #00f7ff;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      min-height: 100vh;
-      padding: 20px;
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Iron Companies</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron&display=swap" rel="stylesheet">
 
-    h1 {
-      font-size: 3rem;
-      text-shadow: 0 0 10px #00f7ff, 0 0 20px #00f7ff;
-      margin-bottom: 10px;
-    }
+<style>
+body{
+  margin:0;
+  background:radial-gradient(ellipse at top,#0f0f0f,#000);
+  font-family:'Orbitron',sans-serif;
+  color:#00f7ff;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  min-height:100vh;
+  padding:20px;
+}
 
-    p {
-      font-size: 1.2rem;
-      color: #ccc;
-      text-shadow: 0 0 5px #007a99;
-    }
+h1{
+  font-size:3rem;
+  text-shadow:0 0 10px #00f7ff,0 0 20px #00f7ff;
+}
 
-    ul {
-      list-style: none;
-      padding: 0;
-      max-width: 800px;
-      text-align: left;
-    }
+.section{
+  background:rgba(255,255,255,0.03);
+  border:1px solid #00f7ff44;
+  border-radius:20px;
+  padding:20px;
+  margin:20px;
+  width:90%;
+  max-width:500px;
+  text-align:center;
+}
 
-    li {
-      font-size: 1rem;
-      color: #bbb;
-      background: rgba(255, 255, 255, 0.05);
-      border-left: 4px solid #00f7ff;
-      margin: 10px 0;
-      padding: 15px;
-      border-radius: 10px;
-      box-shadow: 0 0 10px #00f7ff22;
-      text-shadow: 0 0 3px #005566;
-    }
+button{
+  background:#00f7ff;
+  color:#000;
+  padding:10px 20px;
+  border:none;
+  border-radius:10px;
+  cursor:pointer;
+  margin:10px;
+  font-family:'Orbitron';
+}
 
-    .section {
-      background: rgba(255, 255, 255, 0.03);
-      border: 1px solid #00f7ff44;
-      border-radius: 20px;
-      padding: 20px;
-      margin: 20px;
-      box-shadow: 0 0 10px #00f7ff22;
-      max-width: 900px;
-      backdrop-filter: blur(10px);
-    }
+input{
+  width:100%;
+  padding:10px;
+  margin:10px 0;
+  background:#000;
+  border:1px solid #00f7ff;
+  color:#0ff;
+}
 
-    h2 {
-      color: #00f7ff;
-      font-size: 2rem;
-      margin-bottom: 10px;
-      text-shadow: 0 0 10px #00f7ff;
-    }
-
-    a.join-link {
-      color: #00f7ff;
-      text-decoration: underline;
-      font-weight: bold;
-      display: inline-block;
-      margin-top: 10px;
-    }
-
-    button {
-      background: #00f7ff;
-      color: #000;
-      padding: 10px 20px;
-      font-family: 'Orbitron', sans-serif;
-      border: none;
-      border-radius: 10px;
-      font-size: 1rem;
-      cursor: pointer;
-      box-shadow: 0 0 10px #00f7ff;
-    }
-
-    button:hover {
-      background: #00c4cc;
-    }
-
-    /* Modal */
-    .modal {
-      display: none;
-      position: fixed;
-      z-index: 1000;
-      left: 0;
-      top: 0;
-      width: 100%;
-      height: 100%;
-      overflow: auto;
-      background-color: rgba(0,0,0,0.9);
-      padding-top: 60px;
-    }
-
-    .modal-content {
-      background: #111;
-      margin: auto;
-      padding: 20px;
-      border: 1px solid #00f7ff;
-      width: 80%;
-      color: #00f7ff;
-      box-shadow: 0 0 20px #00f7ff;
-      border-radius: 15px;
-    }
-
-    .close {
-      color: #aaa;
-      float: right;
-      font-size: 28px;
-      font-weight: bold;
-      cursor: pointer;
-    }
-
-    textarea {
-      width: 100%;
-      height: 150px;
-      background: #000;
-      color: #0ff;
-      border: 1px solid #0ff;
-      font-family: monospace;
-      padding: 10px;
-      font-size: 1rem;
-    }
-
-    .output {
-      background: #000;
-      border: 1px solid #0ff;
-      padding: 10px;
-      min-height: 50px;
-      margin-top: 10px;
-      white-space: pre-wrap;
-    }
-
-    footer {
-      margin-top: 40px;
-      font-size: 0.8rem;
-      color: #555;
-    }
-  </style>
+.output{
+  margin-top:10px;
+  font-size:0.9rem;
+  color:#0ff;
+}
+</style>
 </head>
+
 <body>
-  <h1>Iron Companies</h1>
-  <p><strong>Founder:</strong> Morris Arthur</p>
-  <p><em>“Code. Create. Control.”</em></p>
 
-  <div class="section">
-    <h2>🚀 Technologies</h2>
-    <ul>
-      <li><strong>🧠 Deity AI</strong> – A smart assistant that can think, remember, and help you control systems or programs like a real brain.</li>
-      <li><strong>🕶️ Holographic AI</strong> – An AI designed to talk and interact like a real person, and one day, show up as a hologram.</li>
-      <li><strong>⚙️ Ironscript</strong> – Your own programming language made for speed and power.</li>
-      <li><strong>💽 Codex Obscura</strong> – A secret system that stores powerful code and hidden ideas for future inventions.</li>
-      <li><strong>🖥️ Iron OS</strong> – A futuristic operating system designed by Iron Companies.</li>
-    </ul>
-    <button id="learnBtn">📘 Learn Ironscript</button>
-  </div>
+<h1>Iron Companies</h1>
+<p>Founder: Morris Arthur</p>
 
-  <div class="section">
-    <h2>💻 Ironscript Interpreter</h2>
-    <textarea id="ironscriptCode" placeholder="Type your Ironscript code here..."></textarea>
-    <button onclick="runIronscript()">Run</button>
-    <div class="output" id="output"></div>
-  </div>
+<div class="section">
+  <h2>Join Iron Companies</h2>
 
-  <div class="section">
-    <h2>💼 Join Iron Companies</h2>
-    <p>Join our mission to build the future. Earn <strong>IRON Credits</strong> for code, design, and ideas.</p>
-    <a href="mailto:morrarth5656@gmail.com" class="join-link">📧 Join Iron Companies Now</a>
-  </div>
+  <input type="email" id="email" placeholder="Email">
+  <input type="password" id="password" placeholder="Password">
 
-  <footer>© 2025 Iron Companies. Built by Morris Arthur. All rights reserved.</footer>
+  <button onclick="register()">Create Account</button>
+  <button onclick="login()">Login</button>
 
-  <!-- Learn Ironscript Modal -->
-  <div id="learnModal" class="modal">
-    <div class="modal-content">
-      <span class="close">&times;</span>
-      <h2>Ironscript Syntax</h2>
-      <pre>
-# Variables
-let x = 10
-let name = "Morris"
+  <div class="output" id="authOutput"></div>
+</div>
 
-# Functions
-func greet(name) {
-  print("Hello, " + name)
-}
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import {
+  getAuth,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  sendEmailVerification
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
-# Loops
-for i in range(1, 5) {
-  print(i)
-}
+const firebaseConfig = {
+  apiKey: "AIzaSyD6c1k8BURliiSAwEOnT_HW1MaZjNhHJSM",
+  authDomain: "iron-companies.firebaseapp.com",
+  projectId: "iron-companies",
+  storageBucket: "iron-companies.firebasestorage.app",
+  messagingSenderId: "692492696732",
+  appId: "1:692492696732:web:cd29fc124ddc0fa014c159"
+};
 
-# If statement
-if x > 5 {
-  print("x is big")
-} else {
-  print("x is small")
-}
-      </pre>
-    </div>
-  </div>
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
 
-  <script>
-    // Modal handling
-    const modal = document.getElementById("learnModal");
-    const btn = document.getElementById("learnBtn");
-    const span = document.getElementsByClassName("close")[0];
+window.register = async () => {
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+  const output = document.getElementById("authOutput");
 
-    btn.onclick = () => modal.style.display = "block";
-    span.onclick = () => modal.style.display = "none";
-    window.onclick = (event) => { if (event.target == modal) modal.style.display = "none"; }
+  try {
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    await sendEmailVerification(userCredential.user);
+    output.innerText = "Verification email sent. Check your inbox.";
+  } catch (error) {
+    output.innerText = error.message;
+  }
+};
 
-    // Simple Ironscript Interpreter Simulation
-    function runIronscript() {
-      const code = document.getElementById("ironscriptCode").value;
-      let output = "";
-      try {
-        // Minimal parser (replace with real Ironscript logic)
-        if (code.includes("print")) {
-          output = code.match(/print\((.*?)\)/g)
-            .map(line => line.replace(/print\(|\)/g, ""))
-            .join("\n");
-        } else {
-          output = "Code executed (simulation)";
-        }
-      } catch (err) {
-        output = "Error: " + err.message;
-      }
-      document.getElementById("output").innerText = output;
+window.login = async () => {
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+  const output = document.getElementById("authOutput");
+
+  try {
+    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+
+    if (userCredential.user.emailVerified) {
+      output.innerText = "Login successful. Redirecting...";
+      setTimeout(() => {
+        window.location.href = "employee.html";
+      }, 1500);
+    } else {
+      output.innerText = "Please verify your email before logging in.";
     }
-  </script>
+
+  } catch (error) {
+    output.innerText = error.message;
+  }
+};
+</script>
+
 </body>
 </html>
