@@ -1,243 +1,237 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Iron Companies</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Iron Companies</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron&display=swap" rel="stylesheet">
 
-<link href="https://fonts.googleapis.com/css2?family=Orbitron&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: radial-gradient(ellipse at top, #0f0f0f, #000);
+      font-family: 'Orbitron', sans-serif;
+      color: #00f7ff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
 
-<style>
-body{
-  margin:0;
-  padding:0;
-  font-family:'Orbitron',sans-serif;
-  background:radial-gradient(ellipse at top,#0f0f0f,#000);
-  color:#00f7ff;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  min-height:100vh;
-  padding:20px;
-}
+    h1 {
+      font-size: 3rem;
+      text-shadow: 0 0 10px #00f7ff, 0 0 20px #00f7ff;
+      margin-bottom: 10px;
+    }
 
-h1{
-  font-size:3rem;
-  text-shadow:0 0 10px #00f7ff,0 0 20px #00f7ff;
-}
+    p {
+      font-size: 1.2rem;
+      color: #ccc;
+      text-shadow: 0 0 5px #007a99;
+    }
 
-.section{
-  background:rgba(255,255,255,0.03);
-  border:1px solid #00f7ff44;
-  border-radius:20px;
-  padding:20px;
-  margin:20px;
-  max-width:900px;
-  width:100%;
-  backdrop-filter:blur(10px);
-  transition:.3s ease;
-}
+    ul {
+      list-style: none;
+      padding: 0;
+      max-width: 800px;
+      text-align: left;
+    }
 
-.section:hover{
-  transform:translateY(-5px);
-}
+    li {
+      font-size: 1rem;
+      color: #bbb;
+      background: rgba(255, 255, 255, 0.05);
+      border-left: 4px solid #00f7ff;
+      margin: 10px 0;
+      padding: 15px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px #00f7ff22;
+      text-shadow: 0 0 3px #005566;
+    }
 
-button{
-  background:#00f7ff;
-  color:#000;
-  padding:10px 20px;
-  border:none;
-  border-radius:10px;
-  cursor:pointer;
-  font-family:'Orbitron',sans-serif;
-  transition:.3s ease;
-  box-shadow:0 0 10px #00f7ff;
-}
+    .section {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid #00f7ff44;
+      border-radius: 20px;
+      padding: 20px;
+      margin: 20px;
+      box-shadow: 0 0 10px #00f7ff22;
+      max-width: 900px;
+      backdrop-filter: blur(10px);
+    }
 
-button:hover{
-  transform:scale(1.1);
-  box-shadow:0 0 20px #00f7ff;
-}
+    h2 {
+      color: #00f7ff;
+      font-size: 2rem;
+      margin-bottom: 10px;
+      text-shadow: 0 0 10px #00f7ff;
+    }
 
-textarea,input{
-  width:100%;
-  background:#000;
-  color:#0ff;
-  border:1px solid #0ff;
-  padding:10px;
-  margin-top:10px;
-  font-family:monospace;
-}
+    button {
+      background: #00f7ff;
+      color: #000;
+      padding: 10px 20px;
+      font-family: 'Orbitron', sans-serif;
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+      cursor: pointer;
+      box-shadow: 0 0 10px #00f7ff;
+      margin-top: 10px;
+    }
 
-.output{
-  background:#000;
-  border:1px solid #0ff;
-  padding:10px;
-  margin-top:10px;
-  min-height:50px;
-  white-space:pre-wrap;
-}
+    input {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      background: #000;
+      border: 1px solid #00f7ff;
+      color: #0ff;
+    }
 
-.modal{
-  display:none;
-  position:fixed;
-  top:0;
-  left:0;
-  width:100%;
-  height:100%;
-  background:rgba(0,0,0,0.9);
-  justify-content:center;
-  align-items:center;
-}
+    .output {
+      background: #000;
+      border: 1px solid #0ff;
+      padding: 10px;
+      min-height: 50px;
+      margin-top: 10px;
+      white-space: pre-wrap;
+    }
 
-.modal-content{
-  background:#111;
-  padding:20px;
-  border:1px solid #00f7ff;
-  border-radius:15px;
-  width:90%;
-  max-width:400px;
-}
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.9);
+      padding-top: 60px;
+    }
 
-.close{
-  float:right;
-  cursor:pointer;
-}
-</style>
+    .modal-content {
+      background: #111;
+      margin: auto;
+      padding: 20px;
+      border: 1px solid #00f7ff;
+      width: 80%;
+      max-width: 400px;
+      color: #00f7ff;
+      box-shadow: 0 0 20px #00f7ff;
+      border-radius: 15px;
+    }
+
+    .close {
+      float: right;
+      font-size: 28px;
+      cursor: pointer;
+    }
+  </style>
 </head>
 
 <body>
 
-<h1 id="typeTitle"></h1>
+<h1>Iron Companies</h1>
 <p><strong>Founder:</strong> Morris Arthur</p>
-<p><em>Code. Create. Control.</em></p>
+<p><em>“Code. Create. Control.”</em></p>
 
 <div class="section">
-<h2>Ironscript Interpreter</h2>
-<textarea id="ironscriptCode" placeholder="let x = 5&#10;print(x)"></textarea>
-<button onclick="runIronscript()">Run</button>
-<div class="output" id="output"></div>
+  <h2>🚀 Technologies</h2>
+  <ul>
+    <li><strong>🧠 Deity AI</strong> – A smart assistant that can think and help control systems.</li>
+    <li><strong>🕶️ Holographic AI</strong> – AI designed to interact like a real human.</li>
+    <li><strong>⚙️ Ironscript</strong> – Your own programming language.</li>
+    <li><strong>💽 Codex Obscura</strong> – A secret system storing future inventions.</li>
+    <li><strong>🖥️ Iron OS</strong> – A futuristic operating system.</li>
+  </ul>
 </div>
 
 <div class="section">
-<h2>Join Iron Companies</h2>
-<button onclick="openJoinModal()">🚀 Join Iron Companies</button>
+  <h2>💼 Join Iron Companies</h2>
+  <button onclick="openJoinModal()">🚀 Join Iron Companies</button>
 </div>
 
-<!-- JOIN MODAL -->
+<!-- AUTH MODAL -->
 <div id="joinModal" class="modal">
-<div class="modal-content">
-<span class="close" onclick="closeJoinModal()">&times;</span>
-<h3>Employee Access</h3>
-<input type="email" id="email" placeholder="Email">
-<input type="password" id="password" placeholder="Password">
-<button onclick="register()">Create Account</button>
-<button onclick="login()">Login</button>
-<div class="output" id="authOutput"></div>
-</div>
+  <div class="modal-content">
+    <span class="close" onclick="closeJoinModal()">&times;</span>
+    <h2>Access Portal</h2>
+
+    <input type="email" id="email" placeholder="Email">
+    <input type="password" id="password" placeholder="Password">
+
+    <button onclick="register()">Create Account</button>
+    <button onclick="login()">Login</button>
+
+    <div class="output" id="authOutput"></div>
+  </div>
 </div>
 
-<!-- JS -->
 <script type="module">
-
-// 🔥 TYPEWRITER EFFECT
-const titleText="Iron Companies";
-let i=0;
-function typeEffect(){
-  if(i<titleText.length){
-    document.getElementById("typeTitle").innerHTML+=titleText.charAt(i);
-    i++;
-    setTimeout(typeEffect,80);
-  }
-}
-typeEffect();
-
-// 🔥 IRONSCRIPT ENGINE
-window.runIronscript=function(){
-  const code=document.getElementById("ironscriptCode").value;
-  const output=document.getElementById("output");
-  output.innerText="";
-  let variables={};
-
-  try{
-    code.split("\n").forEach(line=>{
-      line=line.trim();
-
-      if(line.startsWith("let")){
-        let parts=line.replace("let","").split("=");
-        let name=parts[0].trim();
-        let value=eval(parts[1]);
-        variables[name]=value;
-      }
-
-      else if(line.startsWith("print")){
-        let content=line.match(/print\((.*?)\)/)[1];
-        Object.keys(variables).forEach(v=>{
-          content=content.replaceAll(v,variables[v]);
-        });
-        output.innerText+=eval(content)+"\n";
-      }
-    });
-  }catch(err){
-    output.innerText="Error: "+err.message;
-  }
-}
-
-// 🔥 MODAL CONTROL
-window.openJoinModal=()=>document.getElementById("joinModal").style.display="flex";
-window.closeJoinModal=()=>document.getElementById("joinModal").style.display="none";
-
-// 🔥 FIREBASE
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { 
+import {
   getAuth,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   sendEmailVerification
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
-const firebaseConfig={
-  apiKey:"YOUR_API_KEY",
-  authDomain:"YOUR_AUTH_DOMAIN",
-  projectId:"YOUR_PROJECT_ID",
-  appId:"YOUR_APP_ID"
+const firebaseConfig = {
+  apiKey: "AIzaSyD6c1k8BURliiSAwEOnT_HW1MaZjNhHJSM",
+  authDomain: "iron-companies.firebaseapp.com",
+  projectId: "iron-companies",
+  storageBucket: "iron-companies.firebasestorage.app",
+  messagingSenderId: "692492696732",
+  appId: "1:692492696732:web:cd29fc124ddc0fa014c159"
 };
 
-const app=initializeApp(firebaseConfig);
-const auth=getAuth(app);
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
 
-window.register=async function(){
-  const email=document.getElementById("email").value;
-  const password=document.getElementById("password").value;
-  const output=document.getElementById("authOutput");
+window.openJoinModal = () => {
+  document.getElementById("joinModal").style.display = "block";
+};
 
-  try{
-    const user=await createUserWithEmailAndPassword(auth,email,password);
-    await sendEmailVerification(user.user);
-    output.innerText="Verification email sent.";
-  }catch(err){
-    output.innerText=err.message;
+window.closeJoinModal = () => {
+  document.getElementById("joinModal").style.display = "none";
+};
+
+window.register = async () => {
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+  const output = document.getElementById("authOutput");
+
+  try {
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    await sendEmailVerification(userCredential.user);
+    output.innerText = "Verification email sent. Check inbox.";
+  } catch (error) {
+    output.innerText = error.message;
   }
-}
+};
 
-window.login=async function(){
-  const email=document.getElementById("email").value;
-  const password=document.getElementById("password").value;
-  const output=document.getElementById("authOutput");
+window.login = async () => {
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+  const output = document.getElementById("authOutput");
 
-  try{
-    const user=await signInWithEmailAndPassword(auth,email,password);
+  try {
+    const userCredential = await signInWithEmailAndPassword(auth, email, password);
 
-    if(user.user.emailVerified){
-      window.location.href="employee.html";
-    }else{
-      output.innerText="Verify email before login.";
+    if (userCredential.user.emailVerified) {
+      window.location.href = "employee.html";
+    } else {
+      output.innerText = "Please verify your email first.";
     }
-  }catch(err){
-    output.innerText=err.message;
-  }
-}
 
+  } catch (error) {
+    output.innerText = error.message;
+  }
+};
 </script>
+
 </body>
 </html>
