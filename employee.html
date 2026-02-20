@@ -7,7 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Orbitron&display=swap" rel="stylesheet">
 
 <style>
-body{
+body {
   margin:0;
   padding:0;
   background:radial-gradient(ellipse at top,#0f0f0f,#000);
@@ -17,7 +17,7 @@ body{
   flex-direction:column;
   align-items:center;
   min-height:100vh;
-  padding:40px;
+  padding:20px;
 }
 
 h1{
@@ -25,19 +25,36 @@ h1{
   text-shadow:0 0 10px #00f7ff,0 0 20px #00f7ff;
 }
 
-.portal-box{
+.portal-box {
   background:rgba(255,255,255,0.03);
   border:1px solid #00f7ff44;
   border-radius:20px;
   padding:30px;
-  margin-top:30px;
-  max-width:700px;
+  margin-top:20px;
+  max-width:800px;
   width:90%;
   box-shadow:0 0 15px #00f7ff22;
-  text-align:center;
 }
 
-button{
+#chatBox {
+  background: #000;
+  border:1px solid #00f7ff;
+  height:300px;
+  overflow-y:auto;
+  padding:10px;
+  margin-bottom:10px;
+}
+
+input#messageInput {
+  width:80%;
+  padding:10px;
+  border:1px solid #00f7ff;
+  background:#000;
+  color:#0ff;
+  border-radius:5px;
+}
+
+button {
   background:#00f7ff;
   color:#000;
   padding:10px 20px;
@@ -45,7 +62,7 @@ button{
   border-radius:10px;
   cursor:pointer;
   font-family:'Orbitron';
-  margin-top:20px;
+  margin-top:10px;
 }
 
 button:hover{
@@ -53,7 +70,6 @@ button:hover{
 }
 </style>
 </head>
-
 <body>
 
 <h1>🛡 Iron Companies Employee Portal</h1>
@@ -61,11 +77,10 @@ button:hover{
 <div class="portal-box">
   <p id="welcomeText">Loading...</p>
 
-  <p>
-    Status: <strong>Authorized Personnel</strong><br>
-    System Access Level: <strong>Employee</strong>
-  </p>
+  <div id="chatBox"></div>
 
+  <input type="text" id="messageInput" placeholder="Type your message...">
+  <button onclick="sendMessage()">Send</button>
   <button onclick="logout()">Logout</button>
 </div>
 
@@ -76,6 +91,16 @@ import {
   onAuthStateChanged,
   signOut
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  doc,
+  getDoc,
+  query,
+  orderBy,
+  onSnapshot
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyD6c1k8BURliiSAwEOnT_HW1MaZjNhHJSM",
@@ -88,20 +113,57 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
+const db = getFirestore(app);
 
-onAuthStateChanged(auth, (user) => {
+let userData = null;
+
+onAuthStateChanged(auth, async (user) => {
   if (!user) {
     window.location.href = "index.html";
-  } 
-  else if (!user.emailVerified) {
-    alert("Verify your email first.");
+    return;
+  }
+  if (!user.emailVerified) {
+    alert("Please verify your email first.");
     window.location.href = "index.html";
+    return;
   }
-  else {
-    document.getElementById("welcomeText").innerText =
-      "Welcome, " + user.email;
+
+  // Get username from Firestore
+  const docRef = doc(db, "users", user.uid);
+  const docSnap = await getDoc(docRef);
+  if (docSnap.exists()) {
+    userData = docSnap.data();
+    document.getElementById("welcomeText").innerText = "Welcome, " + userData.username;
+  } else {
+    document.getElementById("welcomeText").innerText = "Welcome, " + user.email;
   }
+
+  // Listen to messages in real-time
+  const messagesRef = collection(db, "messages");
+  const q = query(messagesRef, orderBy("timestamp"));
+  onSnapshot(q, (snapshot) => {
+    const chatBox = document.getElementById("chatBox");
+    chatBox.innerHTML = "";
+    snapshot.forEach(doc => {
+      const m = doc.data();
+      chatBox.innerHTML += `<p><strong>${m.username}:</strong> ${m.text}</p>`;
+    });
+    chatBox.scrollTop = chatBox.scrollHeight;
+  });
 });
+
+window.sendMessage = async () => {
+  const text = document.getElementById("messageInput").value;
+  if (!text || !userData) return;
+  const messagesRef = collection(db, "messages");
+  await addDoc(messagesRef, {
+    uid: auth.currentUser.uid,
+    username: userData.username,
+    text: text,
+    timestamp: Date.now()
+  });
+  document.getElementById("messageInput").value = "";
+};
 
 window.logout = () => {
   signOut(auth).then(() => {
