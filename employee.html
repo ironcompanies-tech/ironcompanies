@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Iron Companies | Employee Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron&display=swap" rel="stylesheet">
+
+<style>
+body{
+  margin:0;
+  padding:0;
+  background:radial-gradient(ellipse at top,#0f0f0f,#000);
+  font-family:'Orbitron',sans-serif;
+  color:#00f7ff;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  min-height:100vh;
+  padding:40px;
+}
+
+h1{
+  font-size:2.5rem;
+  text-shadow:0 0 10px #00f7ff,0 0 20px #00f7ff;
+}
+
+.portal-box{
+  background:rgba(255,255,255,0.03);
+  border:1px solid #00f7ff44;
+  border-radius:20px;
+  padding:30px;
+  margin-top:30px;
+  max-width:700px;
+  width:90%;
+  box-shadow:0 0 15px #00f7ff22;
+  text-align:center;
+}
+
+button{
+  background:#00f7ff;
+  color:#000;
+  padding:10px 20px;
+  border:none;
+  border-radius:10px;
+  cursor:pointer;
+  font-family:'Orbitron';
+  margin-top:20px;
+}
+
+button:hover{
+  box-shadow:0 0 20px #00f7ff;
+}
+</style>
+</head>
+
+<body>
+
+<h1>🛡 Iron Companies Employee Portal</h1>
+
+<div class="portal-box">
+  <p id="welcomeText">Loading...</p>
+
+  <p>
+    Status: <strong>Authorized Personnel</strong><br>
+    System Access Level: <strong>Employee</strong>
+  </p>
+
+  <button onclick="logout()">Logout</button>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import {
+  getAuth,
+  onAuthStateChanged,
+  signOut
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyD6c1k8BURliiSAwEOnT_HW1MaZjNhHJSM",
+  authDomain: "iron-companies.firebaseapp.com",
+  projectId: "iron-companies",
+  storageBucket: "iron-companies.firebasestorage.app",
+  messagingSenderId: "692492696732",
+  appId: "1:692492696732:web:cd29fc124ddc0fa014c159"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+
+onAuthStateChanged(auth, (user) => {
+  if (!user) {
+    window.location.href = "index.html";
+  } 
+  else if (!user.emailVerified) {
+    alert("Verify your email first.");
+    window.location.href = "index.html";
+  }
+  else {
+    document.getElementById("welcomeText").innerText =
+      "Welcome, " + user.email;
+  }
+});
+
+window.logout = () => {
+  signOut(auth).then(() => {
+    window.location.href = "index.html";
+  });
+};
+</script>
+
+</body>
+</html>
