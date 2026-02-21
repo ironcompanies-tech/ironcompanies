@@ -7,15 +7,13 @@
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&display=swap" rel="stylesheet">
 
 <style>
-* {
-  box-sizing: border-box;
-}
+* { box-sizing: border-box; }
 
 body {
   margin: 0;
   font-family: 'Orbitron', sans-serif;
-  background: radial-gradient(circle at top left, #0f2027, #000000 70%);
-  color: #00f7ff;
+  background: radial-gradient(circle at top left, #0a0f2f, #000022 70%);
+  color: #00e5ff;
   display: flex;
   flex-direction: column;
   height: 100vh;
@@ -23,27 +21,28 @@ body {
 
 header {
   padding: 15px 25px;
-  background: linear-gradient(90deg, #00f7ff22, #00f7ff11);
+  background: linear-gradient(90deg, #00e5ff22, #00bcd433);
   backdrop-filter: blur(10px);
-  border-bottom: 1px solid #00f7ff55;
+  border-bottom: 1px solid #00e5ff55;
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
-#welcomeText {
-  font-size: 1rem;
-}
+#welcomeText { font-size: 1rem; }
 
 .logout-btn {
-  background: #00f7ff;
+  background: #00e5ff;
   color: black;
   border: none;
   padding: 6px 14px;
   border-radius: 8px;
   cursor: pointer;
   font-weight: bold;
+  transition: transform 0.2s;
 }
+
+.logout-btn:hover { transform: scale(1.05); }
 
 #chatContainer {
   flex: 1;
@@ -59,12 +58,12 @@ header {
 }
 
 .message {
-  background: linear-gradient(145deg, #111, #1a1a1a);
+  background: linear-gradient(145deg, #001433, #001a55);
   margin-bottom: 12px;
   padding: 12px 15px;
   border-radius: 14px;
-  border-left: 3px solid #00f7ff;
-  box-shadow: 0 0 15px #00f7ff22;
+  border-left: 3px solid #00e5ff;
+  box-shadow: 0 0 15px #00e5ff22;
   animation: fadeIn 0.3s ease-in-out;
 }
 
@@ -73,12 +72,12 @@ header {
   justify-content: space-between;
   font-size: 0.8rem;
   margin-bottom: 6px;
-  color: #aaa;
+  color: #aadfff;
 }
 
 .message-text {
   font-size: 0.95rem;
-  color: #e0f7ff;
+  color: #d0f7ff;
   word-wrap: break-word;
 }
 
@@ -97,9 +96,9 @@ header {
   flex: 1;
   padding: 12px;
   border-radius: 10px;
-  border: 1px solid #00f7ff;
-  background: #000;
-  color: #00f7ff;
+  border: 1px solid #00e5ff;
+  background: #000022;
+  color: #00e5ff;
   font-family: 'Orbitron', sans-serif;
 }
 
@@ -107,16 +106,15 @@ header {
   padding: 12px 18px;
   border-radius: 10px;
   border: none;
-  background: linear-gradient(90deg, #00f7ff, #00bcd4);
+  background: linear-gradient(90deg, #00e5ff, #00bcd4);
   color: black;
   font-weight: bold;
   cursor: pointer;
-  box-shadow: 0 0 15px #00f7ff66;
+  box-shadow: 0 0 15px #00e5ff66;
+  transition: transform 0.2s;
 }
 
-#sendBtn:hover {
-  transform: scale(1.05);
-}
+#sendBtn:hover { transform: scale(1.05); }
 </style>
 </head>
 
@@ -192,14 +190,20 @@ onAuthStateChanged(auth, async (user) => {
 });
 
 function loadMessages() {
-  const q = query(collection(db, "messages"), orderBy("createdAt"));
+  const q = query(collection(db, "messages"), orderBy("createdAt", "asc"));
+
   onSnapshot(q, (snapshot) => {
     const messagesDiv = document.getElementById("messages");
     messagesDiv.innerHTML = "";
 
     snapshot.forEach((doc) => {
       const message = doc.data();
-      const time = message.createdAt?.toDate().toLocaleTimeString() || "";
+
+      let time = "Sending...";
+      if (message.createdAt && message.createdAt.seconds) {
+        time = new Date(message.createdAt.seconds * 1000)
+          .toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      }
 
       messagesDiv.innerHTML += `
         <div class="message">
