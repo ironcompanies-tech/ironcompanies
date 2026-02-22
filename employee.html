@@ -1,48 +1,27 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Iron Companies Messenger</title>
+  <title>Iron Companies - Employee Chat</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <style>
     body {
       margin: 0;
       font-family: Arial, sans-serif;
-      background: #0f2027;
-      display: flex;
-      height: 100vh;
+      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
       color: white;
-    }
-
-    .sidebar {
-      width: 30%;
-      background: #1c2b36;
-      padding: 15px;
-      overflow-y: auto;
-    }
-
-    .chat-area {
-      width: 70%;
       display: flex;
       flex-direction: column;
-      background: #203a43;
+      height: 100vh;
     }
 
-    .chat-header {
+    header {
       padding: 15px;
-      background: #2c5364;
+      text-align: center;
+      font-size: 20px;
       font-weight: bold;
-    }
-
-    .user-item {
-      padding: 10px;
-      background: rgba(255,255,255,0.05);
-      margin-bottom: 8px;
-      border-radius: 8px;
-      cursor: pointer;
-    }
-
-    .user-item:hover {
-      background: rgba(255,255,255,0.15);
+      background: rgba(0,0,0,0.3);
+      backdrop-filter: blur(10px);
     }
 
     #messages {
@@ -52,39 +31,91 @@
     }
 
     .message {
-      background: rgba(255,255,255,0.1);
-      padding: 8px;
-      border-radius: 8px;
-      margin-bottom: 8px;
-      max-width: 70%;
+      background: rgba(255,255,255,0.08);
+      padding: 10px;
+      margin-bottom: 10px;
+      border-radius: 10px;
     }
 
-    .mine {
-      background: #00d4ff;
-      color: black;
-      margin-left: auto;
+    .reply {
+      border-left: 3px solid #00d4ff;
+      margin-left: 15px;
+      background: rgba(0,212,255,0.08);
+    }
+
+    .username {
+      font-weight: bold;
+      color: #00d4ff;
+    }
+
+    .time {
+      font-size: 11px;
+      opacity: 0.6;
+      margin-left: 8px;
+    }
+
+    .reply-btn {
+      font-size: 11px;
+      cursor: pointer;
+      color: #00d4ff;
+      margin-top: 5px;
+    }
+
+    img {
+      max-width: 200px;
+      border-radius: 8px;
+      margin-top: 6px;
+    }
+
+    #replyingTo {
+      background: rgba(0,212,255,0.2);
+      padding: 6px;
+      display: none;
+      font-size: 12px;
     }
 
     .input-area {
       display: flex;
       padding: 10px;
-      background: #2c5364;
+      background: rgba(0,0,0,0.3);
+      gap: 5px;
+      align-items: center;
     }
 
-    input {
+    #messageInput {
       flex: 1;
       padding: 10px;
-      border-radius: 6px;
+      border-radius: 8px;
       border: none;
       outline: none;
     }
 
-    button {
-      margin-left: 5px;
+    #fileLabel {
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      background: #00d4ff;
+      border-radius: 50%;
+    }
+
+    #fileLabel img {
+      width: 24px;
+      height: 24px;
+    }
+
+    #imageInput {
+      display: none;
+    }
+
+    button.send-btn {
       padding: 10px;
       border: none;
-      border-radius: 6px;
+      border-radius: 8px;
       background: #00d4ff;
+      color: black;
       font-weight: bold;
       cursor: pointer;
     }
@@ -93,33 +124,34 @@
 
 <body>
 
-<div class="sidebar">
-  <h3>Chats</h3>
-  <div id="chatList"></div>
-</div>
+<header>Iron Companies Employee Chat</header>
 
-<div class="chat-area">
-  <div class="chat-header" id="chatHeader">Select a chat</div>
-  <div id="messages"></div>
-  <div class="input-area">
-    <input type="text" id="messageInput" placeholder="Type message...">
-    <button onclick="sendMessage()">Send</button>
-  </div>
+<div id="messages"></div>
+
+<div id="replyingTo"></div>
+
+<div class="input-area">
+  <label id="fileLabel" for="imageInput">
+    <img src="https://img.icons8.com/ios-filled/50/000000/picture.png"/>
+  </label>
+  <input type="file" id="imageInput" accept="image/*">
+  <input type="text" id="messageInput" placeholder="Type message...">
+  <button class="send-btn" onclick="sendMessage()">Send</button>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import {
-  getFirestore,
-  collection,
-  addDoc,
-  getDocs,
-  query,
-  where,
-  onSnapshot,
+import { 
+  getFirestore, 
+  collection, 
+  addDoc, 
+  query, 
+  orderBy, 
+  onSnapshot, 
   serverTimestamp,
-  orderBy
+  getDoc,
+  doc
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -135,9 +167,8 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-let currentUser = null;
-let currentChatId = null;
-let unsubscribeMessages = null;
+let currentUserData = null;
+let replyToMessage = null;
 
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
@@ -145,85 +176,92 @@ onAuthStateChanged(auth, async (user) => {
     return;
   }
 
-  currentUser = user;
-  loadUsers();
+  const userDoc = await getDoc(doc(db, "users", user.uid));
+  currentUserData = userDoc.data();
+  loadMessages();
 });
 
-async function loadUsers() {
-  const snapshot = await getDocs(collection(db, "users"));
-  const chatList = document.getElementById("chatList");
-  chatList.innerHTML = "";
+window.sendMessage = async () => {
+  const input = document.getElementById("messageInput");
+  const fileInput = document.getElementById("imageInput");
+  const file = fileInput.files[0];
+  const text = input.value.trim();
 
-  // Add company group once
-  const groupDiv = document.createElement("div");
-  groupDiv.className = "user-item";
-  groupDiv.innerText = "📢 Iron Companies (Group)";
-  groupDiv.onclick = () => openChat("companyGroup", "Iron Companies");
-  chatList.appendChild(groupDiv);
+  if (!text && !file) return;
 
-  snapshot.forEach(docSnap => {
-    if (docSnap.id !== currentUser.uid) {
-      const user = docSnap.data();
-      const div = document.createElement("div");
-      div.className = "user-item";
-      div.innerText = user.username;
-      div.onclick = () => openPrivateChat(docSnap.id, user.username);
-      chatList.appendChild(div);
-    }
-  });
-}
+  let imageBase64 = "";
 
-async function openPrivateChat(otherUid, username) {
-  const chatsRef = collection(db, "chats");
-  const q = query(chatsRef, where("members", "array-contains", currentUser.uid));
-  const snapshot = await getDocs(q);
-
-  let existingChat = null;
-
-  snapshot.forEach(docSnap => {
-    const data = docSnap.data();
-    if (data.type === "private" && data.members.includes(otherUid)) {
-      existingChat = docSnap.id;
-    }
-  });
-
-  if (!existingChat) {
-    const newChat = await addDoc(chatsRef, {
-      type: "private",
-      members: [currentUser.uid, otherUid],
-      createdAt: serverTimestamp()
+  if (file) {
+    // Auto compress image
+    imageBase64 = await new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = function(event){
+        const img = new Image();
+        img.onload = function(){
+          const canvas = document.createElement("canvas");
+          const maxWidth = 600;
+          const scaleSize = maxWidth / img.width;
+          canvas.width = maxWidth;
+          canvas.height = img.height * scaleSize;
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          resolve(canvas.toDataURL("image/jpeg",0.7));
+        };
+        img.src = event.target.result;
+      };
+      reader.readAsDataURL(file);
     });
-    existingChat = newChat.id;
   }
 
-  openChat(existingChat, username);
-}
+  await addDoc(collection(db, "messages"), {
+    text: text,
+    imageBase64: imageBase64,
+    username: currentUserData.username,
+    userId: auth.currentUser.uid,
+    createdAt: serverTimestamp(),
+    replyTo: replyToMessage || null
+  });
 
-function openChat(chatId, name) {
-  currentChatId = chatId;
-  document.getElementById("chatHeader").innerText = name;
+  input.value = "";
+  fileInput.value = "";
+  replyToMessage = null;
+  document.getElementById("replyingTo").style.display = "none";
+};
 
-  if (unsubscribeMessages) {
-    unsubscribeMessages();
-  }
-
-  const messagesRef = collection(db, "chats", chatId, "messages");
-  const q = query(messagesRef, orderBy("createdAt"));
-
-  unsubscribeMessages = onSnapshot(q, snapshot => {
+function loadMessages() {
+  const q = query(collection(db, "messages"), orderBy("createdAt"));
+  onSnapshot(q, (snapshot) => {
     const messagesDiv = document.getElementById("messages");
     messagesDiv.innerHTML = "";
 
-    snapshot.forEach(docSnap => {
+    snapshot.forEach((docSnap) => {
       const msg = docSnap.data();
+      const msgId = docSnap.id;
+
       const div = document.createElement("div");
       div.className = "message";
+      if (msg.replyTo) div.classList.add("reply");
 
-      if (msg.senderId === currentUser.uid) {
-        div.classList.add("mine");
+      const date = msg.createdAt?.toDate();
+      const timeString = date 
+        ? date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) 
+        : "";
+
+      let imageHtml = "";
+      if (msg.imageBase64) {
+        imageHtml = `<img src="${msg.imageBase64}">`;
       }
 
-      div.innerText = msg.text;
+      div.innerHTML = `
+        <div>
+          <span class="username">${msg.username}</span>
+          <span class="time">${timeString}</span>
+        </div>
+        <div>${msg.text || ""}</div>
+        ${imageHtml}
+        <div class="reply-btn" onclick="setReply('${msgId}')">Reply</div>
+      `;
+
       messagesDiv.appendChild(div);
     });
 
@@ -231,20 +269,11 @@ function openChat(chatId, name) {
   });
 }
 
-window.sendMessage = async () => {
-  if (!currentChatId) return;
-
-  const input = document.getElementById("messageInput");
-  const text = input.value.trim();
-  if (!text) return;
-
-  await addDoc(collection(db, "chats", currentChatId, "messages"), {
-    text: text,
-    senderId: currentUser.uid,
-    createdAt: serverTimestamp()
-  });
-
-  input.value = "";
+window.setReply = (id) => {
+  replyToMessage = id;
+  const replyBox = document.getElementById("replyingTo");
+  replyBox.style.display = "block";
+  replyBox.innerText = "Replying to message...";
 };
 </script>
 
