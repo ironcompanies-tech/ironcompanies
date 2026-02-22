@@ -117,9 +117,6 @@ import {
   getDocs,
   query,
   where,
-  doc,
-  getDoc,
-  setDoc,
   onSnapshot,
   serverTimestamp,
   orderBy
@@ -140,6 +137,7 @@ const db = getFirestore(app);
 
 let currentUser = null;
 let currentChatId = null;
+let unsubscribeMessages = null;
 
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
@@ -149,13 +147,19 @@ onAuthStateChanged(auth, async (user) => {
 
   currentUser = user;
   loadUsers();
-  loadCompanyGroup();
 });
 
 async function loadUsers() {
   const snapshot = await getDocs(collection(db, "users"));
   const chatList = document.getElementById("chatList");
   chatList.innerHTML = "";
+
+  // Add company group once
+  const groupDiv = document.createElement("div");
+  groupDiv.className = "user-item";
+  groupDiv.innerText = "📢 Iron Companies (Group)";
+  groupDiv.onclick = () => openChat("companyGroup", "Iron Companies");
+  chatList.appendChild(groupDiv);
 
   snapshot.forEach(docSnap => {
     if (docSnap.id !== currentUser.uid) {
@@ -167,15 +171,6 @@ async function loadUsers() {
       chatList.appendChild(div);
     }
   });
-}
-
-function loadCompanyGroup() {
-  const chatList = document.getElementById("chatList");
-  const div = document.createElement("div");
-  div.className = "user-item";
-  div.innerText = "📢 Iron Companies (Group)";
-  div.onclick = () => openChat("companyGroup", "Iron Companies");
-  chatList.prepend(div);
 }
 
 async function openPrivateChat(otherUid, username) {
@@ -208,10 +203,14 @@ function openChat(chatId, name) {
   currentChatId = chatId;
   document.getElementById("chatHeader").innerText = name;
 
+  if (unsubscribeMessages) {
+    unsubscribeMessages();
+  }
+
   const messagesRef = collection(db, "chats", chatId, "messages");
   const q = query(messagesRef, orderBy("createdAt"));
 
-  onSnapshot(q, snapshot => {
+  unsubscribeMessages = onSnapshot(q, snapshot => {
     const messagesDiv = document.getElementById("messages");
     messagesDiv.innerHTML = "";
 
@@ -219,9 +218,11 @@ function openChat(chatId, name) {
       const msg = docSnap.data();
       const div = document.createElement("div");
       div.className = "message";
+
       if (msg.senderId === currentUser.uid) {
         div.classList.add("mine");
       }
+
       div.innerText = msg.text;
       messagesDiv.appendChild(div);
     });
@@ -232,6 +233,7 @@ function openChat(chatId, name) {
 
 window.sendMessage = async () => {
   if (!currentChatId) return;
+
   const input = document.getElementById("messageInput");
   const text = input.value.trim();
   if (!text) return;
