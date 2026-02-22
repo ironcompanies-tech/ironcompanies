@@ -79,9 +79,10 @@
       padding: 10px;
       background: rgba(0,0,0,0.3);
       gap: 5px;
+      align-items: center;
     }
 
-    input[type="text"] {
+    #messageInput {
       flex: 1;
       padding: 10px;
       border-radius: 8px;
@@ -89,7 +90,27 @@
       outline: none;
     }
 
-    button {
+    #fileLabel {
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      background: #00d4ff;
+      border-radius: 50%;
+    }
+
+    #fileLabel img {
+      width: 24px;
+      height: 24px;
+    }
+
+    #imageInput {
+      display: none;
+    }
+
+    button.send-btn {
       padding: 10px;
       border: none;
       border-radius: 8px;
@@ -97,10 +118,6 @@
       color: black;
       font-weight: bold;
       cursor: pointer;
-    }
-
-    input[type="file"] {
-      color: white;
     }
   </style>
 </head>
@@ -114,138 +131,150 @@
 <div id="replyingTo"></div>
 
 <div class="input-area">
-  <input type="file" id="imageInput">
+  <label id="fileLabel" for="imageInput">
+    <img src="https://img.icons8.com/ios-filled/50/000000/picture.png"/>
+  </label>
+  <input type="file" id="imageInput" accept="image/*">
   <input type="text" id="messageInput" placeholder="Type message...">
-  <button onclick="sendMessage()">Send</button>
+  <button class="send-btn" onclick="sendMessage()">Send</button>
 </div>
 
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-  import { 
-    getFirestore, 
-    collection, 
-    addDoc, 
-    query, 
-    orderBy, 
-    onSnapshot, 
-    serverTimestamp,
-    getDoc,
-    doc
-  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { 
+  getFirestore, 
+  collection, 
+  addDoc, 
+  query, 
+  orderBy, 
+  onSnapshot, 
+  serverTimestamp,
+  getDoc,
+  doc
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyD6c1k8BURliiSAwEOnT_HW1MaZjNhHJSM",
-    authDomain: "iron-companies.firebaseapp.com",
-    projectId: "iron-companies",
-    storageBucket: "iron-companies.firebasestorage.app",
-    messagingSenderId: "692492696732",
-    appId: "1:692492696732:web:cd29fc124ddc0fa014c159"
-  };
+const firebaseConfig = {
+  apiKey: "AIzaSyD6c1k8BURliiSAwEOnT_HW1MaZjNhHJSM",
+  authDomain: "iron-companies.firebaseapp.com",
+  projectId: "iron-companies",
+  storageBucket: "iron-companies.firebasestorage.app",
+  messagingSenderId: "692492696732",
+  appId: "1:692492696732:web:cd29fc124ddc0fa014c159"
+};
 
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const db = getFirestore(app);
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
 
-  let currentUserData = null;
-  let replyToMessage = null;
+let currentUserData = null;
+let replyToMessage = null;
 
-  onAuthStateChanged(auth, async (user) => {
-    if (!user) {
-      window.location.href = "index.html";
-      return;
-    }
+onAuthStateChanged(auth, async (user) => {
+  if (!user) {
+    window.location.href = "index.html";
+    return;
+  }
 
-    const userDoc = await getDoc(doc(db, "users", user.uid));
-    currentUserData = userDoc.data();
-    loadMessages();
-  });
+  const userDoc = await getDoc(doc(db, "users", user.uid));
+  currentUserData = userDoc.data();
+  loadMessages();
+});
 
-  window.sendMessage = async () => {
-    const input = document.getElementById("messageInput");
-    const fileInput = document.getElementById("imageInput");
-    const file = fileInput.files[0];
-    const text = input.value.trim();
+window.sendMessage = async () => {
+  const input = document.getElementById("messageInput");
+  const fileInput = document.getElementById("imageInput");
+  const file = fileInput.files[0];
+  const text = input.value.trim();
 
-    if (!text && !file) return;
+  if (!text && !file) return;
 
-    let imageBase64 = "";
+  let imageBase64 = "";
 
-    if (file) {
-      if (file.size > 700000) {
-        alert("Image too large.");
-        return;
-      }
-
-      imageBase64 = await new Promise((resolve) => {
-        const reader = new FileReader();
-        reader.onloadend = () => resolve(reader.result);
-        reader.readAsDataURL(file);
-      });
-    }
-
-    await addDoc(collection(db, "messages"), {
-      text: text,
-      imageBase64: imageBase64,
-      username: currentUserData.username,
-      userId: auth.currentUser.uid,
-      createdAt: serverTimestamp(),
-      replyTo: replyToMessage || null
-    });
-
-    input.value = "";
-    fileInput.value = "";
-    replyToMessage = null;
-    document.getElementById("replyingTo").style.display = "none";
-  };
-
-  function loadMessages() {
-    const q = query(collection(db, "messages"), orderBy("createdAt"));
-    onSnapshot(q, (snapshot) => {
-      const messagesDiv = document.getElementById("messages");
-      messagesDiv.innerHTML = "";
-
-      snapshot.forEach((docSnap) => {
-        const msg = docSnap.data();
-        const msgId = docSnap.id;
-
-        const div = document.createElement("div");
-        div.className = "message";
-        if (msg.replyTo) div.classList.add("reply");
-
-        const date = msg.createdAt?.toDate();
-        const timeString = date 
-          ? date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) 
-          : "";
-
-        let imageHtml = "";
-        if (msg.imageBase64) {
-          imageHtml = `<img src="${msg.imageBase64}">`;
-        }
-
-        div.innerHTML = `
-          <div>
-            <span class="username">${msg.username}</span>
-            <span class="time">${timeString}</span>
-          </div>
-          <div>${msg.text || ""}</div>
-          ${imageHtml}
-          <div class="reply-btn" onclick="setReply('${msgId}')">Reply</div>
-        `;
-
-        messagesDiv.appendChild(div);
-      });
-
-      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+  if (file) {
+    // Auto compress image
+    imageBase64 = await new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = function(event){
+        const img = new Image();
+        img.onload = function(){
+          const canvas = document.createElement("canvas");
+          const maxWidth = 600;
+          const scaleSize = maxWidth / img.width;
+          canvas.width = maxWidth;
+          canvas.height = img.height * scaleSize;
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          resolve(canvas.toDataURL("image/jpeg",0.7));
+        };
+        img.src = event.target.result;
+      };
+      reader.readAsDataURL(file);
     });
   }
 
-  window.setReply = (id) => {
-    replyToMessage = id;
-    const replyBox = document.getElementById("replyingTo");
-    replyBox.style.display = "block";
-    replyBox.innerText = "Replying to message...";
-  };
+  await addDoc(collection(db, "messages"), {
+    text: text,
+    imageBase64: imageBase64,
+    username: currentUserData.username,
+    userId: auth.currentUser.uid,
+    createdAt: serverTimestamp(),
+    replyTo: replyToMessage || null
+  });
+
+  input.value = "";
+  fileInput.value = "";
+  replyToMessage = null;
+  document.getElementById("replyingTo").style.display = "none";
+};
+
+function loadMessages() {
+  const q = query(collection(db, "messages"), orderBy("createdAt"));
+  onSnapshot(q, (snapshot) => {
+    const messagesDiv = document.getElementById("messages");
+    messagesDiv.innerHTML = "";
+
+    snapshot.forEach((docSnap) => {
+      const msg = docSnap.data();
+      const msgId = docSnap.id;
+
+      const div = document.createElement("div");
+      div.className = "message";
+      if (msg.replyTo) div.classList.add("reply");
+
+      const date = msg.createdAt?.toDate();
+      const timeString = date 
+        ? date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) 
+        : "";
+
+      let imageHtml = "";
+      if (msg.imageBase64) {
+        imageHtml = `<img src="${msg.imageBase64}">`;
+      }
+
+      div.innerHTML = `
+        <div>
+          <span class="username">${msg.username}</span>
+          <span class="time">${timeString}</span>
+        </div>
+        <div>${msg.text || ""}</div>
+        ${imageHtml}
+        <div class="reply-btn" onclick="setReply('${msgId}')">Reply</div>
+      `;
+
+      messagesDiv.appendChild(div);
+    });
+
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+  });
+}
+
+window.setReply = (id) => {
+  replyToMessage = id;
+  const replyBox = document.getElementById("replyingTo");
+  replyBox.style.display = "block";
+  replyBox.innerText = "Replying to message...";
+};
 </script>
 
 </body>
