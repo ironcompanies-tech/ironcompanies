@@ -1,14 +1,14 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Iron Chat</title>
+  <title>Iron Chat - Employee</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body {
       margin: 0;
       display: flex;
       height: 100vh;
-      font-family: Arial, sans-serif;
+      font-family: Arial;
       background: #0f172a;
       color: white;
     }
@@ -21,25 +21,6 @@
       border-right: 1px solid #334155;
     }
 
-    .section-title {
-      margin-top: 20px;
-      font-size: 14px;
-      font-weight: bold;
-      opacity: 0.7;
-    }
-
-    .item {
-      padding: 10px;
-      margin-top: 5px;
-      background: #334155;
-      border-radius: 8px;
-      cursor: pointer;
-    }
-
-    .item:hover {
-      background: #475569;
-    }
-
     .chat-area {
       width: 70%;
       display: flex;
@@ -49,8 +30,8 @@
     .header {
       padding: 15px;
       background: #1e293b;
-      border-bottom: 1px solid #334155;
       font-weight: bold;
+      border-bottom: 1px solid #334155;
     }
 
     #messages {
@@ -60,15 +41,15 @@
     }
 
     .message {
+      margin-bottom: 12px;
       padding: 10px;
-      margin-bottom: 10px;
       border-radius: 8px;
-      max-width: 60%;
       background: #334155;
+      max-width: 70%;
     }
 
     .mine {
-      background: #6366f1;
+      background: #2563eb;
       margin-left: auto;
     }
 
@@ -76,9 +57,10 @@
       display: flex;
       padding: 10px;
       background: #1e293b;
+      border-top: 1px solid #334155;
     }
 
-    .input-area input {
+    input {
       flex: 1;
       padding: 10px;
       border-radius: 6px;
@@ -86,44 +68,55 @@
       outline: none;
     }
 
-    .input-area button {
+    button {
       margin-left: 5px;
-      padding: 10px 15px;
+      padding: 10px;
       border: none;
       border-radius: 6px;
       background: #22c55e;
       color: white;
       cursor: pointer;
+      font-weight: bold;
     }
 
-    .add-project-btn {
-      margin-top: 8px;
-      padding: 8px;
-      width: 100%;
-      background: #22c55e;
-      border: none;
-      border-radius: 6px;
-      color: white;
-      cursor: pointer;
+    .section-title {
+      margin-top: 20px;
+      margin-bottom: 10px;
+      font-weight: bold;
+      color: #94a3b8;
+    }
+
+    .online-user {
+      font-size: 14px;
+      margin-bottom: 5px;
+    }
+
+    .project {
+      font-size: 14px;
+      margin-bottom: 5px;
+      padding: 5px;
+      background: #334155;
+      border-radius: 4px;
     }
   </style>
 </head>
 <body>
 
 <div class="sidebar">
+  <h2>Iron Chat</h2>
 
-  <div class="section-title">ONGOING PROJECTS</div>
+  <div class="section-title">🟢 Online Employees</div>
+  <div id="onlineUsers"></div>
+
+  <div class="section-title">📁 Ongoing Projects</div>
   <div id="projectList"></div>
-  <button class="add-project-btn" onclick="addProject()">+ Add Project</button>
-
-  <div class="section-title">USERS</div>
-  <div id="userList"></div>
-
+  <button onclick="addProject()">Add Project</button>
 </div>
 
 <div class="chat-area">
-  <div class="header" id="chatHeader">Select a user</div>
+  <div class="header">Company Group Chat</div>
   <div id="messages"></div>
+
   <div class="input-area">
     <input type="text" id="messageInput" placeholder="Type message...">
     <button onclick="sendMessage()">Send</button>
@@ -136,11 +129,10 @@ import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/
 import {
   getFirestore,
   collection,
-  getDocs,
   addDoc,
-  query,
-  where,
+  getDocs,
   onSnapshot,
+  query,
   orderBy,
   serverTimestamp,
   doc,
@@ -162,9 +154,8 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 
 let currentUser;
-let currentChatId;
-let unsubscribe;
 
+// 🔥 AUTH
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
     window.location.href = "index.html";
@@ -174,15 +165,17 @@ onAuthStateChanged(auth, async (user) => {
   currentUser = user;
 
   // Set Online
-  await setDoc(doc(db, "status", currentUser.uid), {
+  await setDoc(doc(db, "status", user.uid), {
     online: true,
     lastSeen: serverTimestamp()
   });
 
-  loadUsers();
+  loadOnlineUsers();
   loadProjects();
+  loadMessages();
 });
 
+// 🔴 Set Offline
 window.addEventListener("beforeunload", async () => {
   if (currentUser) {
     await updateDoc(doc(db, "status", currentUser.uid), {
@@ -192,73 +185,57 @@ window.addEventListener("beforeunload", async () => {
   }
 });
 
-async function loadUsers() {
-  const snapshot = await getDocs(collection(db, "users"));
-  const userList = document.getElementById("userList");
-  userList.innerHTML = "";
+// 🟢 ONLINE USERS
+function loadOnlineUsers() {
+  const statusRef = collection(db, "status");
 
-  snapshot.forEach(userDoc => {
-    if (userDoc.id !== currentUser.uid) {
-      const div = document.createElement("div");
-      div.className = "item";
+  onSnapshot(statusRef, async (snapshot) => {
+    const onlineDiv = document.getElementById("onlineUsers");
+    onlineDiv.innerHTML = "";
 
-      const statusRef = doc(db, "status", userDoc.id);
-      onSnapshot(statusRef, (statusSnap) => {
-        let onlineIndicator = "";
-        if (statusSnap.exists() && statusSnap.data().online) {
-          onlineIndicator = " 🟢";
-        }
-        div.innerText = userDoc.data().username + onlineIndicator;
-      });
-
-      div.onclick = () => openChat(userDoc.id, userDoc.data().username);
-      userList.appendChild(div);
-    }
+    snapshot.forEach(async (docSnap) => {
+      if (docSnap.data().online) {
+        const userDoc = await getDocs(collection(db, "users"));
+        userDoc.forEach(u => {
+          if (u.id === docSnap.id) {
+            const div = document.createElement("div");
+            div.className = "online-user";
+            div.innerText = u.data().username + " 🟢";
+            onlineDiv.appendChild(div);
+          }
+        });
+      }
+    });
   });
 }
 
-async function openChat(otherUid, username) {
-  document.getElementById("chatHeader").innerText = username;
+// 💬 GROUP CHAT
+function loadMessages() {
+  const messagesRef = collection(db, "groupChat");
+  const q = query(messagesRef, orderBy("createdAt"));
 
-  const chatsRef = collection(db, "chats");
-  const q = query(chatsRef, where("members", "array-contains", currentUser.uid));
-  const snapshot = await getDocs(q);
-
-  let chatId = null;
-
-  snapshot.forEach(docSnap => {
-    if (docSnap.data().members.includes(otherUid)) {
-      chatId = docSnap.id;
-    }
-  });
-
-  if (!chatId) {
-    const newChat = await addDoc(chatsRef, {
-      members: [currentUser.uid, otherUid],
-      createdAt: serverTimestamp()
-    });
-    chatId = newChat.id;
-  }
-
-  currentChatId = chatId;
-
-  if (unsubscribe) unsubscribe();
-
-  const messagesRef = collection(db, "chats", chatId, "messages");
-  const messageQuery = query(messagesRef, orderBy("createdAt"));
-
-  unsubscribe = onSnapshot(messageQuery, snapshot => {
+  onSnapshot(q, async (snapshot) => {
     const messagesDiv = document.getElementById("messages");
     messagesDiv.innerHTML = "";
 
-    snapshot.forEach(docSnap => {
+    snapshot.forEach(async (docSnap) => {
       const msg = docSnap.data();
+      const userDoc = await getDocs(collection(db, "users"));
+
+      let username = "User";
+      userDoc.forEach(u => {
+        if (u.id === msg.senderId) {
+          username = u.data().username;
+        }
+      });
+
       const div = document.createElement("div");
       div.className = "message";
       if (msg.senderId === currentUser.uid) {
         div.classList.add("mine");
       }
-      div.innerText = msg.text;
+
+      div.innerHTML = "<strong>" + username + ":</strong><br>" + msg.text;
       messagesDiv.appendChild(div);
     });
 
@@ -267,13 +244,11 @@ async function openChat(otherUid, username) {
 }
 
 window.sendMessage = async () => {
-  if (!currentChatId) return;
-
   const input = document.getElementById("messageInput");
   const text = input.value.trim();
   if (!text) return;
 
-  await addDoc(collection(db, "chats", currentChatId, "messages"), {
+  await addDoc(collection(db, "groupChat"), {
     text,
     senderId: currentUser.uid,
     createdAt: serverTimestamp()
@@ -282,15 +257,16 @@ window.sendMessage = async () => {
   input.value = "";
 };
 
+// 📁 PROJECTS
 async function loadProjects() {
   const snapshot = await getDocs(collection(db, "projects"));
   const projectList = document.getElementById("projectList");
   projectList.innerHTML = "";
 
-  snapshot.forEach(projectDoc => {
+  snapshot.forEach(docSnap => {
     const div = document.createElement("div");
-    div.className = "item";
-    div.innerText = projectDoc.data().name;
+    div.className = "project";
+    div.innerText = docSnap.data().name;
     projectList.appendChild(div);
   });
 }
