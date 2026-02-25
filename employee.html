@@ -1,144 +1,92 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Iron Chat - Employee</title>
+  <title>Iron Chat</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    body {
-      margin: 0;
-      display: flex;
-      height: 100vh;
-      font-family: Arial;
-      background: #0f172a;
-      color: white;
+    body{
+      margin:0;
+      font-family:Arial;
+      display:flex;
+      height:100vh;
+      background:#0f2027;
+      color:white;
     }
-
-    .sidebar {
-      width: 30%;
-      background: #1e293b;
-      padding: 15px;
-      overflow-y: auto;
-      border-right: 1px solid #334155;
+    .sidebar{
+      width:30%;
+      background:#1c1c1c;
+      overflow-y:auto;
+      padding:10px;
     }
-
-    .chat-area {
-      width: 70%;
-      display: flex;
-      flex-direction: column;
+    .user{
+      padding:10px;
+      background:#2c2c2c;
+      margin:5px 0;
+      border-radius:8px;
+      cursor:pointer;
     }
-
-    .header {
-      padding: 15px;
-      background: #1e293b;
-      font-weight: bold;
-      border-bottom: 1px solid #334155;
+    .chat{
+      flex:1;
+      display:flex;
+      flex-direction:column;
+      background:#203a43;
     }
-
-    #messages {
-      flex: 1;
-      padding: 15px;
-      overflow-y: auto;
+    .messages{
+      flex:1;
+      overflow-y:auto;
+      padding:10px;
     }
-
-    .message {
-      margin-bottom: 12px;
-      padding: 10px;
-      border-radius: 8px;
-      background: #334155;
-      max-width: 70%;
+    .msg{
+      margin:5px 0;
+      padding:8px;
+      border-radius:8px;
+      max-width:60%;
     }
-
-    .mine {
-      background: #2563eb;
-      margin-left: auto;
+    .me{background:#00c6ff; align-self:flex-end; color:black;}
+    .other{background:#2c5364;}
+    .input{
+      display:flex;
+      padding:10px;
+      background:#1c1c1c;
     }
-
-    .input-area {
-      display: flex;
-      padding: 10px;
-      background: #1e293b;
-      border-top: 1px solid #334155;
+    .input input{
+      flex:1;
+      padding:8px;
+      border:none;
+      border-radius:8px;
     }
-
-    input {
-      flex: 1;
-      padding: 10px;
-      border-radius: 6px;
-      border: none;
-      outline: none;
-    }
-
-    button {
-      margin-left: 5px;
-      padding: 10px;
-      border: none;
-      border-radius: 6px;
-      background: #22c55e;
-      color: white;
-      cursor: pointer;
-      font-weight: bold;
-    }
-
-    .section-title {
-      margin-top: 20px;
-      margin-bottom: 10px;
-      font-weight: bold;
-      color: #94a3b8;
-    }
-
-    .online-user {
-      font-size: 14px;
-      margin-bottom: 5px;
-    }
-
-    .project {
-      font-size: 14px;
-      margin-bottom: 5px;
-      padding: 5px;
-      background: #334155;
-      border-radius: 4px;
+    .input button{
+      margin-left:5px;
+      padding:8px 15px;
+      border:none;
+      border-radius:8px;
+      background:#00c6ff;
+      font-weight:bold;
+      cursor:pointer;
     }
   </style>
 </head>
 <body>
 
-<div class="sidebar">
-  <h2>Iron Chat</h2>
+<div class="sidebar" id="userList"></div>
 
-  <div class="section-title">🟢 Online Employees</div>
-  <div id="onlineUsers"></div>
-
-  <div class="section-title">📁 Ongoing Projects</div>
-  <div id="projectList"></div>
-  <button onclick="addProject()">Add Project</button>
-</div>
-
-<div class="chat-area">
-  <div class="header">Company Group Chat</div>
-  <div id="messages"></div>
-
-  <div class="input-area">
-    <input type="text" id="messageInput" placeholder="Type message...">
+<div class="chat">
+  <div class="messages" id="messages"></div>
+  <div class="input">
+    <input type="text" id="messageInput" placeholder="Type message">
     <button onclick="sendMessage()">Send</button>
   </div>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getAuth, onAuthStateChanged }
+from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import {
-  getFirestore,
-  collection,
-  addDoc,
-  getDocs,
-  onSnapshot,
-  query,
-  orderBy,
-  serverTimestamp,
-  doc,
-  setDoc,
-  updateDoc
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  getFirestore, collection, getDocs, addDoc,
+  serverTimestamp, query, where, onSnapshot
+}
+from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyD6c1k8BURliiSAwEOnT_HW1MaZjNhHJSM",
@@ -154,136 +102,85 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 
 let currentUser;
+let currentChatId;
 
-// 🔥 AUTH
-onAuthStateChanged(auth, async (user) => {
-  if (!user) {
-    window.location.href = "index.html";
-    return;
+onAuthStateChanged(auth, async (user)=>{
+  if(!user){
+    window.location.href="index.html";
   }
-
   currentUser = user;
-
-  // Set Online
-  await setDoc(doc(db, "status", user.uid), {
-    online: true,
-    lastSeen: serverTimestamp()
-  });
-
-  loadOnlineUsers();
-  loadProjects();
-  loadMessages();
+  loadUsers();
 });
 
-// 🔴 Set Offline
-window.addEventListener("beforeunload", async () => {
-  if (currentUser) {
-    await updateDoc(doc(db, "status", currentUser.uid), {
-      online: false,
-      lastSeen: serverTimestamp()
+async function loadUsers(){
+  const snapshot = await getDocs(collection(db,"users"));
+  const list = document.getElementById("userList");
+  list.innerHTML="";
+  snapshot.forEach(docSnap=>{
+    if(docSnap.id !== currentUser.uid){
+      const div=document.createElement("div");
+      div.className="user";
+      div.innerText=docSnap.data().username;
+      div.onclick=()=>openChat(docSnap.id);
+      list.appendChild(div);
+    }
+  });
+}
+
+async function openChat(otherUid){
+  const q=query(collection(db,"chats"),
+    where("members","array-contains",currentUser.uid));
+  const snapshot=await getDocs(q);
+
+  let found=false;
+  snapshot.forEach(docSnap=>{
+    if(docSnap.data().members.includes(otherUid)){
+      currentChatId=docSnap.id;
+      found=true;
+    }
+  });
+
+  if(!found){
+    const newChat=await addDoc(collection(db,"chats"),{
+      members:[currentUser.uid,otherUid],
+      createdAt:serverTimestamp()
     });
+    currentChatId=newChat.id;
   }
-});
 
-// 🟢 ONLINE USERS
-function loadOnlineUsers() {
-  const statusRef = collection(db, "status");
+  listenMessages();
+}
 
-  onSnapshot(statusRef, async (snapshot) => {
-    const onlineDiv = document.getElementById("onlineUsers");
-    onlineDiv.innerHTML = "";
-
-    snapshot.forEach(async (docSnap) => {
-      if (docSnap.data().online) {
-        const userDoc = await getDocs(collection(db, "users"));
-        userDoc.forEach(u => {
-          if (u.id === docSnap.id) {
-            const div = document.createElement("div");
-            div.className = "online-user";
-            div.innerText = u.data().username + " 🟢";
-            onlineDiv.appendChild(div);
-          }
-        });
-      }
+function listenMessages(){
+  const messagesRef=collection(db,"chats",currentChatId,"messages");
+  onSnapshot(messagesRef,(snapshot)=>{
+    const container=document.getElementById("messages");
+    container.innerHTML="";
+    snapshot.forEach(docSnap=>{
+      const msg=document.createElement("div");
+      msg.classList.add("msg");
+      msg.classList.add(
+        docSnap.data().senderId===currentUser.uid ? "me":"other"
+      );
+      msg.innerText=docSnap.data().text;
+      container.appendChild(msg);
     });
   });
 }
 
-// 💬 GROUP CHAT
-function loadMessages() {
-  const messagesRef = collection(db, "groupChat");
-  const q = query(messagesRef, orderBy("createdAt"));
+window.sendMessage=async function(){
+  const text=document.getElementById("messageInput").value;
+  if(!text || !currentChatId) return;
 
-  onSnapshot(q, async (snapshot) => {
-    const messagesDiv = document.getElementById("messages");
-    messagesDiv.innerHTML = "";
-
-    snapshot.forEach(async (docSnap) => {
-      const msg = docSnap.data();
-      const userDoc = await getDocs(collection(db, "users"));
-
-      let username = "User";
-      userDoc.forEach(u => {
-        if (u.id === msg.senderId) {
-          username = u.data().username;
-        }
-      });
-
-      const div = document.createElement("div");
-      div.className = "message";
-      if (msg.senderId === currentUser.uid) {
-        div.classList.add("mine");
-      }
-
-      div.innerHTML = "<strong>" + username + ":</strong><br>" + msg.text;
-      messagesDiv.appendChild(div);
-    });
-
-    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+  await addDoc(collection(db,"chats",currentChatId,"messages"),{
+    text:text,
+    senderId:currentUser.uid,
+    createdAt:serverTimestamp()
   });
+
+  document.getElementById("messageInput").value="";
 }
-
-window.sendMessage = async () => {
-  const input = document.getElementById("messageInput");
-  const text = input.value.trim();
-  if (!text) return;
-
-  await addDoc(collection(db, "groupChat"), {
-    text,
-    senderId: currentUser.uid,
-    createdAt: serverTimestamp()
-  });
-
-  input.value = "";
-};
-
-// 📁 PROJECTS
-async function loadProjects() {
-  const snapshot = await getDocs(collection(db, "projects"));
-  const projectList = document.getElementById("projectList");
-  projectList.innerHTML = "";
-
-  snapshot.forEach(docSnap => {
-    const div = document.createElement("div");
-    div.className = "project";
-    div.innerText = docSnap.data().name;
-    projectList.appendChild(div);
-  });
-}
-
-window.addProject = async () => {
-  const name = prompt("Project Name:");
-  if (!name) return;
-
-  await addDoc(collection(db, "projects"), {
-    name,
-    createdBy: currentUser.uid,
-    createdAt: serverTimestamp()
-  });
-
-  loadProjects();
-};
 </script>
 
 </body>
-</html>
+</html>p
