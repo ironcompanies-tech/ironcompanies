@@ -1,64 +1,230 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Login - Iron Chat</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
-    body{
-      font-family: Arial;
-      background: linear-gradient(135deg,#0f2027,#203a43,#2c5364);
-      display:flex;
-      justify-content:center;
-      align-items:center;
-      height:100vh;
-      margin:0;
-      color:white;
-    }
-    .box{
-      background:#1c1c1c;
-      padding:30px;
-      border-radius:15px;
-      width:320px;
-      text-align:center;
-    }
-    input{
-      width:100%;
-      padding:10px;
-      margin:8px 0;
-      border:none;
-      border-radius:8px;
-    }
-    button{
-      width:100%;
-      padding:10px;
-      margin-top:10px;
-      border:none;
-      border-radius:8px;
-      background:#00c6ff;
-      color:black;
-      font-weight:bold;
-      cursor:pointer;
-    }
-    button:hover{opacity:0.9;}
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Iron Companies</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron&display=swap" rel="stylesheet">
+
+<style>
+body {
+  margin: 0;
+  padding: 0;
+  background: radial-gradient(ellipse at top, #0f0f0f, #000);
+  font-family: 'Orbitron', sans-serif;
+  color: #00f7ff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 3rem;
+  text-shadow: 0 0 10px #00f7ff, 0 0 20px #00f7ff;
+  margin-bottom: 10px;
+}
+
+p {
+  font-size: 1.2rem;
+  color: #ccc;
+  text-shadow: 0 0 5px #007a99;
+}
+
+ul {
+  list-style: none;
+  padding: 0;
+  max-width: 800px;
+  text-align: left;
+}
+
+li {
+  font-size: 1rem;
+  color: #bbb;
+  background: rgba(255, 255, 255, 0.05);
+  border-left: 4px solid #00f7ff;
+  margin: 10px 0;
+  padding: 15px;
+  border-radius: 10px;
+  box-shadow: 0 0 10px #00f7ff22;
+  text-shadow: 0 0 3px #005566;
+}
+
+.section {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid #00f7ff44;
+  border-radius: 20px;
+  padding: 20px;
+  margin: 20px;
+  box-shadow: 0 0 10px #00f7ff22;
+  max-width: 900px;
+  backdrop-filter: blur(10px);
+}
+
+h2 {
+  color: #00f7ff;
+  font-size: 2rem;
+  margin-bottom: 10px;
+  text-shadow: 0 0 10px #00f7ff;
+}
+
+button {
+  background: #00f7ff;
+  color: #000;
+  padding: 10px 20px;
+  font-family: 'Orbitron', sans-serif;
+  border: none;
+  border-radius: 10px;
+  font-size: 1rem;
+  cursor: pointer;
+  box-shadow: 0 0 10px #00f7ff;
+  margin-top: 10px;
+}
+
+input {
+  width: 100%;
+  padding: 10px;
+  margin: 10px 0;
+  background: #000;
+  border: 1px solid #00f7ff;
+  color: #0ff;
+  border-radius: 5px;
+}
+
+.output {
+  background: #000;
+  border: 1px solid #0ff;
+  padding: 10px;
+  min-height: 50px;
+  margin-top: 10px;
+  white-space: pre-wrap;
+}
+
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0,0,0,0.9);
+  padding-top: 60px;
+}
+
+.modal-content {
+  background: #111;
+  margin: auto;
+  padding: 20px;
+  border: 1px solid #00f7ff;
+  width: 80%;
+  max-width: 400px;
+  color: #00f7ff;
+  box-shadow: 0 0 20px #00f7ff;
+  border-radius: 15px;
+}
+
+.close {
+  float: right;
+  font-size: 28px;
+  cursor: pointer;
+}
+</style>
 </head>
+
 <body>
 
-<div class="box">
-  <h2>Iron Chat</h2>
-  <input type="text" id="username" placeholder="Username (for register)">
-  <input type="email" id="email" placeholder="Email">
-  <input type="password" id="password" placeholder="Password">
-  <button onclick="register()">Register</button>
-  <button onclick="login()">Login</button>
+<h1>Iron Companies</h1>
+<p><strong>Founder:</strong> Morris Arthur</p>
+<p><em>“Code. Create. Control.”</em></p>
+
+<div class="section">
+  <h2>🚀 Technologies</h2>
+  <ul>
+    <li><strong>🧠 Deity AI</strong> – A smart assistant that can think and help control systems.</li>
+    <li><strong>🕶️ Holographic AI</strong> – AI designed to interact like a real human.</li>
+    <li><strong>⚙️ Ironscript</strong> – Your own programming language.</li>
+    <li><strong>💽 Codex Obscura</strong> – A secret system storing future inventions.</li>
+    <li><strong>🖥️ Iron OS</strong> – A futuristic operating system.</li>
+  </ul>
 </div>
+
+<div class="section">
+  <h2>💼 Join Iron Companies</h2>
+  <button onclick="openJoinModal()">🚀 Join Iron Companies</button>
+</div>
+
+<!-- JOIN / LOGIN MODAL -->
+<div id="joinModal" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="closeJoinModal()">&times;</span>
+    <h2>Access Portal</h2>
+
+    <input type="text" id="username" placeholder="Choose a username (signup only)">
+    <input type="email" id="email" placeholder="Email">
+    <input type="password" id="password" placeholder="Password">
+
+    <button onclick="register()">Create Account</button>
+    <button onclick="login()">Login</button>
+
+    <div class="output" id="authOutput"></div>
+  </div>
+</div>
+
+<!-- Ironscript Section -->
+<div class="section">
+  <h2>💻 Ironscript Interpreter</h2>
+  <textarea id="ironscriptCode" placeholder="Type your Ironscript code here..."></textarea>
+  <button onclick="runIronscript()">Run</button>
+  <div class="output" id="output"></div>
+</div>
+
+<!-- Learn Ironscript Modal -->
+<div id="learnModal" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="document.getElementById('learnModal').style.display='none'">&times;</span>
+    <h2>Ironscript Syntax</h2>
+    <pre>
+# Variables
+let x = 10
+let name = "Morris"
+
+# Functions
+func greet(name) {
+  print("Hello, " + name)
+}
+
+# Loops
+for i in range(1, 5) {
+  print(i)
+}
+
+# If statement
+if x > 5 {
+  print("x is big")
+} else {
+  print("x is small")
+}
+    </pre>
+  </div>
+</div>
+
+<footer>© 2025 Iron Companies. Built by Morris Arthur. All rights reserved.</footer>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword }
-from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, doc, setDoc }
-from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import {
+  getAuth,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  sendEmailVerification
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import {
+  getFirestore,
+  doc,
+  setDoc
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyD6c1k8BURliiSAwEOnT_HW1MaZjNhHJSM",
@@ -73,30 +239,77 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-window.register = async function(){
+window.openJoinModal = () => {
+  document.getElementById("joinModal").style.display = "block";
+};
+
+window.closeJoinModal = () => {
+  document.getElementById("joinModal").style.display = "none";
+};
+
+window.register = async () => {
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
   const username = document.getElementById("username").value;
+  const output = document.getElementById("authOutput");
+
+  if(!username){
+    output.innerText = "Please enter a username for signup.";
+    return;
+  }
+
+  try {
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    await sendEmailVerification(userCredential.user);
+
+    // Save username in Firestore
+    await setDoc(doc(db, "users", userCredential.user.uid), {
+      username: username,
+      email: email,
+      role: "employee"
+    });
+
+    output.innerText = "Verification email sent. Check inbox.";
+  } catch (error) {
+    output.innerText = error.message;
+  }
+};
+
+window.login = async () => {
   const email = document.getElementById("email").value;
   const password = document.getElementById("password").value;
+  const output = document.getElementById("authOutput");
 
-  const userCredential = await createUserWithEmailAndPassword(auth,email,password);
-  const user = userCredential.user;
+  try {
+    const userCredential = await signInWithEmailAndPassword(auth, email, password);
 
-  await setDoc(doc(db,"users",user.uid),{
-    username: username,
-    email: email,
-    createdAt: new Date()
-  });
+    if (userCredential.user.emailVerified) {
+      window.location.href = "employee.html";
+    } else {
+      output.innerText = "Please verify your email first.";
+    }
 
-  alert("Account created!");
-  window.location.href = "employee.html";
-}
+  } catch (error) {
+    output.innerText = error.message;
+  }
+};
 
-window.login = async function(){
-  const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
-
-  await signInWithEmailAndPassword(auth,email,password);
-  window.location.href = "employee.html";
+// Simple Ironscript interpreter
+function runIronscript() {
+  const code = document.getElementById("ironscriptCode").value;
+  let output = "";
+  try {
+    if (code.includes("print")) {
+      output = code.match(/print\((.*?)\)/g)
+        .map(line => line.replace(/print\(|\)/g, ""))
+        .join("\n");
+    } else {
+      output = "Code executed (simulation)";
+    }
+  } catch (err) {
+    output = "Error: " + err.message;
+  }
+  document.getElementById("output").innerText = output;
 }
 </script>
 
