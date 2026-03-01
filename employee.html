@@ -25,51 +25,55 @@ body{
   background:linear-gradient(135deg,#0b0f1f,#141b2f);
   color:var(--text-main);
   display:flex;
-  flex-direction:column;
+  justify-content:center;
+  align-items:center;
   height:100vh;
+}
+
+/* ===== PORTAL SCREEN ===== */
+#portalScreen{
+  text-align:center;
+}
+
+#launchChatBtn{
+  padding:25px 60px;
+  font-size:1.3rem;
+  border:none;
+  border-radius:18px;
+  cursor:pointer;
+  font-weight:bold;
+  background:linear-gradient(135deg,var(--accent),var(--accent-soft));
+  color:white;
+  box-shadow:0 0 25px var(--accent-glow);
+  transition:0.3s ease;
+}
+
+#launchChatBtn:hover{
+  transform:scale(1.08);
+  box-shadow:0 0 40px var(--accent-glow);
+}
+
+/* ===== CHAT SECTION ===== */
+#chatApp{
+  display:none;
+  flex-direction:column;
+  width:100%;
+  height:100%;
 }
 
 header{
   padding:18px 25px;
-  background:linear-gradient(90deg,#12182b,#1a2440);
-  border-bottom:1px solid var(--accent-glow);
+  background:#12182b;
   display:flex;
   justify-content:space-between;
   align-items:center;
-}
-
-#welcomeText{
-  font-size:1rem;
-  color:var(--accent-soft);
-}
-
-.logout-btn{
-  background:var(--accent);
-  color:white;
-  border:none;
-  padding:8px 16px;
-  border-radius:10px;
-  cursor:pointer;
-  font-weight:bold;
-  transition:0.2s ease;
-}
-
-.logout-btn:hover{
-  background:var(--accent-soft);
-  box-shadow:0 0 15px var(--accent-glow);
-}
-
-#chatContainer{
-  flex:1;
-  display:flex;
-  flex-direction:column;
-  padding:20px;
+  border-bottom:1px solid var(--accent-glow);
 }
 
 #messages{
   flex:1;
   overflow-y:auto;
-  padding-right:8px;
+  padding:20px;
 }
 
 .message{
@@ -78,8 +82,6 @@ header{
   padding:14px 16px;
   border-radius:14px;
   border-left:4px solid var(--accent);
-  box-shadow:0 5px 15px #00000033;
-  animation:fadeIn 0.25s ease-in-out;
 }
 
 .message-header{
@@ -90,21 +92,11 @@ header{
   color:var(--text-muted);
 }
 
-.message-text{
-  font-size:0.95rem;
-  color:var(--text-main);
-  word-wrap:break-word;
-}
-
-@keyframes fadeIn{
-  from{opacity:0;transform:translateY(4px);}
-  to{opacity:1;transform:translateY(0);}
-}
-
 #inputArea{
   display:flex;
-  gap:12px;
-  margin-top:15px;
+  padding:15px;
+  gap:10px;
+  background:#0f1628;
 }
 
 #messageInput{
@@ -113,14 +105,7 @@ header{
   border-radius:12px;
   border:1px solid #1f2a4a;
   background:#0f1628;
-  color:var(--text-main);
-  font-family:'Orbitron',sans-serif;
-}
-
-#messageInput:focus{
-  outline:none;
-  border-color:var(--accent);
-  box-shadow:0 0 10px var(--accent-glow);
+  color:white;
 }
 
 #sendBtn{
@@ -131,24 +116,26 @@ header{
   color:white;
   font-weight:bold;
   cursor:pointer;
-  transition:0.2s ease;
-}
-
-#sendBtn:hover{
-  transform:scale(1.05);
-  box-shadow:0 0 15px var(--accent-glow);
 }
 </style>
 </head>
 
 <body>
 
-<header>
-  <div id="welcomeText">Loading...</div>
-  <button class="logout-btn" onclick="logout()">Logout</button>
-</header>
+<!-- PORTAL -->
+<div id="portalScreen">
+  <h1>Iron Companies</h1>
+  <br><br>
+  <button id="launchChatBtn">Enter Company Chat</button>
+</div>
 
-<div id="chatContainer">
+<!-- CHAT APP -->
+<div id="chatApp">
+  <header>
+    <div id="welcomeText"></div>
+    <button onclick="logout()">Logout</button>
+  </header>
+
   <div id="messages"></div>
 
   <div id="inputArea">
@@ -176,12 +163,9 @@ import {
 from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyD6c1k8BURliiSAwEOnT_HW1MaZjNhHJSM",
-  authDomain: "iron-companies.firebaseapp.com",
-  projectId: "iron-companies",
-  storageBucket: "iron-companies.firebasestorage.app",
-  messagingSenderId: "692492696732",
-  appId: "1:692492696732:web:cd29fc124ddc0fa014c159"
+  apiKey: "YOUR_CONFIG",
+  authDomain: "YOUR_CONFIG",
+  projectId: "YOUR_CONFIG",
 };
 
 const app = initializeApp(firebaseConfig);
@@ -189,67 +173,64 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 
 let currentUserData = null;
+let chatLoaded = false;
 
-onAuthStateChanged(auth, async (user) => {
-  if (!user) {
-    window.location.href = "index.html";
+/* Launch Button */
+document.getElementById("launchChatBtn").addEventListener("click", ()=>{
+  document.getElementById("portalScreen").style.display="none";
+  document.getElementById("chatApp").style.display="flex";
+
+  if(!chatLoaded){
+    loadMessages();
+    chatLoaded = true;
+  }
+});
+
+onAuthStateChanged(auth, async (user)=>{
+  if(!user){
+    window.location.href="index.html";
     return;
   }
 
-  const docRef = doc(db, "users", user.uid);
-  const docSnap = await getDoc(docRef);
+  const docRef = doc(db,"users",user.uid);
+  const snap = await getDoc(docRef);
 
-  if (docSnap.exists()) {
-    currentUserData = docSnap.data();
-  } else {
-    // Auto-create user with clean username (no email showing)
-    const generatedUsername = "User" + Math.floor(Math.random() * 10000);
-
-    await setDoc(docRef, {
-      username: generatedUsername,
-      email: user.email,
-      createdAt: new Date()
+  if(snap.exists()){
+    currentUserData = snap.data();
+  }else{
+    const username="User"+Math.floor(Math.random()*10000);
+    await setDoc(docRef,{
+      username:username,
+      email:user.email,
+      createdAt:new Date()
     });
-
-    currentUserData = {
-      username: generatedUsername
-    };
+    currentUserData={username};
   }
 
-  document.getElementById("welcomeText").innerText =
-    "Welcome, " + currentUserData.username;
-
-  loadMessages();
+  document.getElementById("welcomeText").innerText=
+    "Welcome, "+currentUserData.username;
 });
 
 function loadMessages(){
-  const q = query(collection(db,"messages"),orderBy("createdAt","asc"));
+  const q=query(collection(db,"messages"),orderBy("createdAt","asc"));
 
   onSnapshot(q,(snapshot)=>{
-    const messagesDiv = document.getElementById("messages");
+    const messagesDiv=document.getElementById("messages");
     messagesDiv.innerHTML="";
 
     snapshot.forEach((docSnap)=>{
-      const message = docSnap.data();
-
-      let time="...";
-      if(message.createdAt?.seconds){
-        time = new Date(message.createdAt.seconds*1000)
-        .toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
-      }
-
+      const message=docSnap.data();
       messagesDiv.innerHTML+=`
         <div class="message">
           <div class="message-header">
             <strong>${message.username}</strong>
-            <span>${time}</span>
           </div>
-          <div class="message-text">${message.text}</div>
+          <div>${message.text}</div>
         </div>
       `;
     });
 
-    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    messagesDiv.scrollTop=messagesDiv.scrollHeight;
   });
 }
 
