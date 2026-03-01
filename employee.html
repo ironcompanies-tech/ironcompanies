@@ -7,100 +7,136 @@
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&display=swap" rel="stylesheet">
 
 <style>
-* { box-sizing: border-box; }
-
-body {
-  margin: 0;
-  font-family: 'Orbitron', sans-serif;
-  background: radial-gradient(circle at top left, #0a0f2f, #000022 70%);
-  color: #00e5ff;
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
+:root{
+  --bg-dark:#0b0f1f;
+  --bg-card:#12182b;
+  --accent:#4da3ff;
+  --accent-soft:#7ec8ff;
+  --accent-glow:#4da3ff55;
+  --text-main:#e6f1ff;
+  --text-muted:#9fb3d9;
 }
 
-header {
-  padding: 15px 25px;
-  background: linear-gradient(90deg, #00e5ff22, #00bcd433);
-  backdrop-filter: blur(10px);
-  border-bottom: 1px solid #00e5ff55;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+*{box-sizing:border-box;}
+
+body{
+  margin:0;
+  font-family:'Orbitron',sans-serif;
+  background:linear-gradient(135deg,#0b0f1f,#141b2f);
+  color:var(--text-main);
+  display:flex;
+  flex-direction:column;
+  height:100vh;
 }
 
-#welcomeText { font-size: 1rem; }
-
-.logout-btn {
-  background: #00e5ff;
-  color: black;
-  border: none;
-  padding: 6px 14px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: bold;
+header{
+  padding:18px 25px;
+  background:linear-gradient(90deg,#12182b,#1a2440);
+  border-bottom:1px solid var(--accent-glow);
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
 }
 
-#chatContainer {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  padding: 20px;
+#welcomeText{
+  font-size:1rem;
+  color:var(--accent-soft);
 }
 
-#messages {
-  flex: 1;
-  overflow-y: auto;
-  padding-right: 10px;
+.logout-btn{
+  background:var(--accent);
+  color:white;
+  border:none;
+  padding:8px 16px;
+  border-radius:10px;
+  cursor:pointer;
+  font-weight:bold;
+  transition:0.2s ease;
 }
 
-.message {
-  background: linear-gradient(145deg, #001433, #001a55);
-  margin-bottom: 12px;
-  padding: 12px 15px;
-  border-radius: 14px;
-  border-left: 3px solid #00e5ff;
-  box-shadow: 0 0 15px #00e5ff22;
+.logout-btn:hover{
+  background:var(--accent-soft);
+  box-shadow:0 0 15px var(--accent-glow);
 }
 
-.message-header {
-  display: flex;
-  justify-content: space-between;
-  font-size: 0.8rem;
-  margin-bottom: 6px;
-  color: #aadfff;
+#chatContainer{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  padding:20px;
 }
 
-.message-text {
-  font-size: 0.95rem;
-  color: #d0f7ff;
-  word-wrap: break-word;
+#messages{
+  flex:1;
+  overflow-y:auto;
+  padding-right:8px;
 }
 
-#inputArea {
-  display: flex;
-  gap: 10px;
-  margin-top: 15px;
+.message{
+  background:var(--bg-card);
+  margin-bottom:14px;
+  padding:14px 16px;
+  border-radius:14px;
+  border-left:4px solid var(--accent);
+  box-shadow:0 5px 15px #00000033;
+  animation:fadeIn 0.25s ease-in-out;
 }
 
-#messageInput {
-  flex: 1;
-  padding: 12px;
-  border-radius: 10px;
-  border: 1px solid #00e5ff;
-  background: #000022;
-  color: #00e5ff;
-  font-family: 'Orbitron', sans-serif;
+.message-header{
+  display:flex;
+  justify-content:space-between;
+  font-size:0.8rem;
+  margin-bottom:6px;
+  color:var(--text-muted);
 }
 
-#sendBtn {
-  padding: 12px 18px;
-  border-radius: 10px;
-  border: none;
-  background: linear-gradient(90deg, #00e5ff, #00bcd4);
-  color: black;
-  font-weight: bold;
-  cursor: pointer;
+.message-text{
+  font-size:0.95rem;
+  color:var(--text-main);
+  word-wrap:break-word;
+}
+
+@keyframes fadeIn{
+  from{opacity:0;transform:translateY(4px);}
+  to{opacity:1;transform:translateY(0);}
+}
+
+#inputArea{
+  display:flex;
+  gap:12px;
+  margin-top:15px;
+}
+
+#messageInput{
+  flex:1;
+  padding:14px;
+  border-radius:12px;
+  border:1px solid #1f2a4a;
+  background:#0f1628;
+  color:var(--text-main);
+  font-family:'Orbitron',sans-serif;
+}
+
+#messageInput:focus{
+  outline:none;
+  border-color:var(--accent);
+  box-shadow:0 0 10px var(--accent-glow);
+}
+
+#sendBtn{
+  padding:14px 20px;
+  border-radius:12px;
+  border:none;
+  background:linear-gradient(135deg,var(--accent),var(--accent-soft));
+  color:white;
+  font-weight:bold;
+  cursor:pointer;
+  transition:0.2s ease;
+}
+
+#sendBtn:hover{
+  transform:scale(1.05);
+  box-shadow:0 0 15px var(--accent-glow);
 }
 </style>
 </head>
@@ -160,56 +196,49 @@ onAuthStateChanged(auth, async (user) => {
     return;
   }
 
-  try {
-    const docRef = doc(db, "users", user.uid);
-    const docSnap = await getDoc(docRef);
+  const docRef = doc(db, "users", user.uid);
+  const docSnap = await getDoc(docRef);
 
-    if (docSnap.exists()) {
-      currentUserData = docSnap.data();
-    } else {
-      // 🔥 AUTO SELF-HEALING USER CREATION
-      const generatedUsername = user.email.split("@")[0];
+  if (docSnap.exists()) {
+    currentUserData = docSnap.data();
+  } else {
+    // Auto-create user with clean username (no email showing)
+    const generatedUsername = "User" + Math.floor(Math.random() * 10000);
 
-      await setDoc(docRef, {
-        username: generatedUsername,
-        email: user.email,
-        createdAt: new Date()
-      });
+    await setDoc(docRef, {
+      username: generatedUsername,
+      email: user.email,
+      createdAt: new Date()
+    });
 
-      currentUserData = {
-        username: generatedUsername,
-        email: user.email
-      };
-    }
-
-    document.getElementById("welcomeText").innerText =
-      "Welcome, " + currentUserData.username;
-
-    loadMessages();
-
-  } catch (error) {
-    console.error("User Load Error:", error);
-    alert(error.message);
+    currentUserData = {
+      username: generatedUsername
+    };
   }
+
+  document.getElementById("welcomeText").innerText =
+    "Welcome, " + currentUserData.username;
+
+  loadMessages();
 });
 
-function loadMessages() {
-  const q = query(collection(db, "messages"), orderBy("createdAt", "asc"));
+function loadMessages(){
+  const q = query(collection(db,"messages"),orderBy("createdAt","asc"));
 
-  onSnapshot(q, (snapshot) => {
+  onSnapshot(q,(snapshot)=>{
     const messagesDiv = document.getElementById("messages");
-    messagesDiv.innerHTML = "";
+    messagesDiv.innerHTML="";
 
-    snapshot.forEach((docSnap) => {
+    snapshot.forEach((docSnap)=>{
       const message = docSnap.data();
 
-      let time = "Sending...";
-      if (message.createdAt?.seconds) {
-        time = new Date(message.createdAt.seconds * 1000)
-          .toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      let time="...";
+      if(message.createdAt?.seconds){
+        time = new Date(message.createdAt.seconds*1000)
+        .toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
       }
 
-      messagesDiv.innerHTML += `
+      messagesDiv.innerHTML+=`
         <div class="message">
           <div class="message-header">
             <strong>${message.username}</strong>
@@ -224,31 +253,24 @@ function loadMessages() {
   });
 }
 
-window.sendMessage = async () => {
-  try {
-    const input = document.getElementById("messageInput");
-    const text = input.value.trim();
+window.sendMessage = async ()=>{
+  const input=document.getElementById("messageInput");
+  const text=input.value.trim();
+  if(!text||!currentUserData) return;
 
-    if (!text || !currentUserData) return;
+  await addDoc(collection(db,"messages"),{
+    text:text,
+    username:currentUserData.username,
+    uid:auth.currentUser.uid,
+    createdAt:serverTimestamp()
+  });
 
-    await addDoc(collection(db, "messages"), {
-      text: text,
-      username: currentUserData.username,
-      uid: auth.currentUser.uid,
-      createdAt: serverTimestamp()
-    });
-
-    input.value = "";
-
-  } catch (error) {
-    console.error("Message Error:", error);
-    alert(error.message);
-  }
+  input.value="";
 };
 
-window.logout = async () => {
+window.logout = async ()=>{
   await signOut(auth);
-  window.location.href = "index.html";
+  window.location.href="index.html";
 };
 </script>
 
