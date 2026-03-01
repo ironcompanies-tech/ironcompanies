@@ -131,6 +131,7 @@ import {
   addDoc,
   doc,
   getDoc,
+  setDoc,
   query,
   orderBy,
   onSnapshot,
@@ -165,14 +166,27 @@ onAuthStateChanged(auth, async (user) => {
 
     if (docSnap.exists()) {
       currentUserData = docSnap.data();
-      document.getElementById("welcomeText").innerText =
-        "Welcome, " + currentUserData.username;
     } else {
-      document.getElementById("welcomeText").innerText =
-        "Welcome, " + user.email;
+      // 🔥 AUTO SELF-HEALING USER CREATION
+      const generatedUsername = user.email.split("@")[0];
+
+      await setDoc(docRef, {
+        username: generatedUsername,
+        email: user.email,
+        createdAt: new Date()
+      });
+
+      currentUserData = {
+        username: generatedUsername,
+        email: user.email
+      };
     }
 
+    document.getElementById("welcomeText").innerText =
+      "Welcome, " + currentUserData.username;
+
     loadMessages();
+
   } catch (error) {
     console.error("User Load Error:", error);
     alert(error.message);
@@ -215,15 +229,7 @@ window.sendMessage = async () => {
     const input = document.getElementById("messageInput");
     const text = input.value.trim();
 
-    if (!text) {
-      alert("Message is empty");
-      return;
-    }
-
-    if (!currentUserData) {
-      alert("User data not loaded yet");
-      return;
-    }
+    if (!text || !currentUserData) return;
 
     await addDoc(collection(db, "messages"), {
       text: text,
