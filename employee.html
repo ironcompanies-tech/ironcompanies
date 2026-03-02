@@ -3,62 +3,57 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Iron Companies - Employee Portal</title>
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
+<title>Iron Companies - Employee</title>
 
 <style>
 :root{
-  --bg-dark:#0a0f1c;
-  --bg-gradient:#141c33;
-  --accent:#3b82f6;
-  --accent-light:#60a5fa;
-  --accent-glow:#3b82f655;
-  --text-main:#f1f5ff;
-  --text-muted:#9fb3d9;
+  --bg1:#0f172a;
+  --bg2:#1e293b;
+  --accent:#2563eb;
+  --accent2:#38bdf8;
+  --card:#1e293b;
+  --text:#f1f5f9;
+  --muted:#94a3b8;
 }
 
-*{box-sizing:border-box;margin:0;padding:0;}
+*{box-sizing:border-box;margin:0;padding:0;font-family:sans-serif;}
 
 body{
-  font-family:'Orbitron',sans-serif;
-  background:linear-gradient(135deg,var(--bg-dark),var(--bg-gradient));
-  color:var(--text-main);
+  background:linear-gradient(135deg,var(--bg1),var(--bg2));
+  color:var(--text);
   height:100vh;
   display:flex;
   justify-content:center;
   align-items:center;
 }
 
-/* ===== PORTAL SCREEN ===== */
-#portalScreen{
+/* Portal */
+#portal{
   text-align:center;
 }
 
-#portalScreen h1{
-  font-size:2.5rem;
-  margin-bottom:40px;
-  letter-spacing:2px;
-}
-
-#launchChatBtn{
-  padding:40px 120px;
-  font-size:1.8rem;
-  font-weight:700;
+#enterBtn{
+  width:230px;
+  height:230px;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
   border:none;
-  border-radius:25px;
-  cursor:pointer;
-  background:linear-gradient(135deg,var(--accent),var(--accent-light));
+  border-radius:18px;
+  font-size:1.4rem;
+  font-weight:bold;
   color:white;
-  box-shadow:0 0 40px var(--accent-glow);
-  transition:0.3s ease;
+  cursor:pointer;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  transition:0.3s;
+  box-shadow:0 0 40px #2563eb55;
 }
 
-#launchChatBtn:hover{
+#enterBtn:hover{
   transform:scale(1.08);
-  box-shadow:0 0 70px var(--accent-glow);
 }
 
-/* ===== CHAT APP ===== */
+/* Chat */
 #chatApp{
   display:none;
   flex-direction:column;
@@ -67,12 +62,12 @@ body{
 }
 
 header{
-  padding:18px 30px;
-  background:#11182c;
+  padding:15px 20px;
+  background:#0f172a;
   display:flex;
   justify-content:space-between;
   align-items:center;
-  border-bottom:1px solid var(--accent-glow);
+  border-bottom:1px solid #334155;
 }
 
 #messages{
@@ -82,59 +77,66 @@ header{
 }
 
 .message{
-  background:#151d36;
-  margin-bottom:15px;
-  padding:15px;
-  border-radius:15px;
-  border-left:4px solid var(--accent);
+  background:var(--card);
+  padding:12px;
+  margin-bottom:12px;
+  border-radius:12px;
 }
 
-.message-header{
-  display:flex;
-  justify-content:space-between;
+.username{
   font-size:0.8rem;
+  color:var(--muted);
   margin-bottom:6px;
-  color:var(--text-muted);
+}
+
+img{
+  max-width:200px;
+  border-radius:10px;
+  margin-top:8px;
 }
 
 #inputArea{
   display:flex;
-  padding:15px;
-  gap:10px;
-  background:#0f1628;
+  padding:12px;
+  gap:8px;
+  background:#0f172a;
 }
 
-#messageInput{
+input[type=text]{
   flex:1;
-  padding:14px;
-  border-radius:12px;
-  border:1px solid #243055;
-  background:#0f1628;
-  color:white;
+  padding:10px;
+  border-radius:8px;
+  border:none;
 }
 
-#sendBtn{
-  padding:14px 25px;
-  border-radius:12px;
+button{
+  padding:10px 16px;
   border:none;
-  font-weight:bold;
-  background:linear-gradient(135deg,var(--accent),var(--accent-light));
-  color:white;
+  border-radius:8px;
   cursor:pointer;
+}
+
+footer{
+  text-align:center;
+  padding:8px;
+  font-size:0.75rem;
+  color:var(--muted);
+}
+footer a{
+  color:#38bdf8;
+  text-decoration:none;
 }
 </style>
 </head>
-
 <body>
 
-<div id="portalScreen">
-  <h1>IRON COMPANIES</h1>
-  <button id="launchChatBtn">JOIN CHAT</button>
+<div id="portal">
+  <button id="enterBtn">ENTER CHAT</button>
 </div>
 
 <div id="chatApp">
   <header>
-    <div id="welcomeText"></div>
+    <div id="welcome"></div>
     <button onclick="logout()">Logout</button>
   </header>
 
@@ -142,8 +144,14 @@ header{
 
   <div id="inputArea">
     <input type="text" id="messageInput" placeholder="Type message...">
-    <button id="sendBtn" onclick="sendMessage()">Send</button>
+    <input type="file" id="imageInput" accept="image/*">
+    <button onclick="sendMessage()">Send</button>
   </div>
+
+  <footer>
+    <a href="privacy.html">Privacy Policy</a> |
+    <a href="terms.html">Terms & Conditions</a>
+  </footer>
 </div>
 
 <script type="module">
@@ -151,20 +159,12 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/fireba
 import { getAuth, onAuthStateChanged, signOut }
 from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import {
-  getFirestore,
-  collection,
-  addDoc,
-  doc,
-  getDoc,
-  setDoc,
-  query,
-  orderBy,
-  onSnapshot,
-  serverTimestamp
+  getFirestore, collection, addDoc, doc,
+  getDoc, setDoc, query, orderBy,
+  onSnapshot, serverTimestamp, updateDoc
 }
 from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-/* YOUR ORIGINAL CONFIG RESTORED */
 const firebaseConfig = {
   apiKey: "AIzaSyD6c1k8BURliiSAwEOnT_HW1MaZjNhHJSM",
   authDomain: "iron-companies.firebaseapp.com",
@@ -178,19 +178,15 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-let currentUserData = null;
-let chatLoaded = false;
+let currentUser=null;
+let userData=null;
 
-document.getElementById("launchChatBtn").addEventListener("click", ()=>{
-  document.getElementById("portalScreen").style.display="none";
+/* Enter Chat */
+document.getElementById("enterBtn").onclick=()=>{
+  document.getElementById("portal").style.display="none";
   document.getElementById("chatApp").style.display="flex";
-  document.body.style.alignItems="stretch";
-
-  if(!chatLoaded){
-    loadMessages();
-    chatLoaded = true;
-  }
-});
+  loadMessages();
+};
 
 onAuthStateChanged(auth, async (user)=>{
   if(!user){
@@ -198,69 +194,100 @@ onAuthStateChanged(auth, async (user)=>{
     return;
   }
 
-  const docRef = doc(db,"users",user.uid);
-  const snap = await getDoc(docRef);
+  currentUser=user;
+  const ref=doc(db,"users",user.uid);
+  const snap=await getDoc(ref);
 
   if(snap.exists()){
-    currentUserData = snap.data();
+    userData=snap.data();
   } else {
-    const username="User"+Math.floor(Math.random()*10000);
-    await setDoc(docRef,{
+    const username="User"+Math.floor(Math.random()*9999);
+    await setDoc(ref,{
       username:username,
-      email:user.email,
+      online:true,
       createdAt:new Date()
     });
-    currentUserData={username};
+    userData={username};
   }
 
-  document.getElementById("welcomeText").innerText =
-    "Welcome, "+currentUserData.username;
+  await updateDoc(ref,{online:true,lastSeen:serverTimestamp()});
+
+  document.getElementById("welcome").innerText="Welcome "+userData.username;
+
+  window.addEventListener("beforeunload",()=>{
+    updateDoc(ref,{online:false,lastSeen:serverTimestamp()});
+  });
 });
 
+/* Load Messages */
 function loadMessages(){
   const q=query(collection(db,"messages"),orderBy("createdAt","asc"));
-
-  onSnapshot(q,(snapshot)=>{
-    const messagesDiv=document.getElementById("messages");
-    messagesDiv.innerHTML="";
-
-    snapshot.forEach((docSnap)=>{
-      const message=docSnap.data();
-
-      messagesDiv.innerHTML+=`
+  onSnapshot(q,(snap)=>{
+    const div=document.getElementById("messages");
+    div.innerHTML="";
+    snap.forEach(doc=>{
+      const m=doc.data();
+      div.innerHTML+=`
         <div class="message">
-          <div class="message-header">
-            <strong>${message.username}</strong>
-          </div>
-          <div>${message.text}</div>
+          <div class="username">${m.username}</div>
+          ${m.text || ""}
+          ${m.image ? `<img src="${m.image}">` : ""}
         </div>
       `;
     });
-
-    messagesDiv.scrollTop=messagesDiv.scrollHeight;
+    div.scrollTop=div.scrollHeight;
   });
 }
 
-window.sendMessage = async ()=>{
-  const input=document.getElementById("messageInput");
-  const text=input.value.trim();
-  if(!text||!currentUserData) return;
+/* Image Compression */
+function compressImage(file){
+  return new Promise(resolve=>{
+    const reader=new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload=e=>{
+      const img=new Image();
+      img.src=e.target.result;
+      img.onload=()=>{
+        const canvas=document.createElement("canvas");
+        const ctx=canvas.getContext("2d");
+        const maxWidth=800;
+        const scale=maxWidth/img.width;
+        canvas.width=maxWidth;
+        canvas.height=img.height*scale;
+        ctx.drawImage(img,0,0,canvas.width,canvas.height);
+        resolve(canvas.toDataURL("image/jpeg",0.6));
+      };
+    };
+  });
+}
+
+/* Send */
+window.sendMessage=async ()=>{
+  const text=document.getElementById("messageInput").value.trim();
+  const file=document.getElementById("imageInput").files[0];
+  let image=null;
+
+  if(file){
+    image=await compressImage(file);
+  }
+
+  if(!text && !image) return;
 
   await addDoc(collection(db,"messages"),{
-    text:text,
-    username:currentUserData.username,
-    uid:auth.currentUser.uid,
+    username:userData.username,
+    text:text||"",
+    image:image||null,
     createdAt:serverTimestamp()
   });
 
-  input.value="";
+  document.getElementById("messageInput").value="";
+  document.getElementById("imageInput").value="";
 };
 
-window.logout = async ()=>{
+window.logout=async ()=>{
   await signOut(auth);
   window.location.href="index.html";
 };
 </script>
-
 </body>
 </html>
