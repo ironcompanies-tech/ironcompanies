@@ -27,135 +27,124 @@ body{
   align-items:center;
 }
 
-/* Profile Setup */
-#profileSetup{
+/* Screens */
+.screen{
   display:none;
+  width:100%;
+  max-width:500px;
+  padding:20px;
   text-align:center;
 }
-#profileSetup input{
-  padding:8px;
-  margin:6px;
-  border-radius:6px;
+
+input{
+  width:100%;
+  padding:10px;
+  margin:8px 0;
+  border-radius:8px;
   border:none;
 }
 
-/* Portal */
-#portal{
-  text-align:center;
+button{
+  padding:10px 16px;
+  border:none;
+  border-radius:8px;
+  cursor:pointer;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  color:white;
+  font-weight:bold;
 }
+
+/* Square Portal Button */
 #enterBtn{
   width:220px;
   height:220px;
-  border:none;
-  border-radius:20px;
-  background:linear-gradient(135deg,var(--accent),var(--accent2));
-  font-size:1.4rem;
-  font-weight:bold;
-  color:white;
-  cursor:pointer;
   display:flex;
   justify-content:center;
   align-items:center;
-  box-shadow:0 0 40px #2563eb55;
-  transition:0.3s;
+  margin:auto;
+  font-size:1.2rem;
 }
-#enterBtn:hover{transform:scale(1.07);}
 
 /* Chat */
 #chatApp{
   display:none;
   flex-direction:column;
   width:100%;
-  height:100%;
+  height:100vh;
 }
+
 header{
-  padding:12px;
-  background:#0f172a;
+  padding:10px;
   display:flex;
   justify-content:space-between;
-  align-items:center;
+  background:#0f172a;
 }
+
 #messages{
   flex:1;
   overflow-y:auto;
-  padding:15px;
+  padding:10px;
 }
+
 .message{
   background:var(--card);
   padding:10px;
+  border-radius:10px;
   margin-bottom:10px;
-  border-radius:12px;
 }
+
 .username{
   font-size:0.8rem;
   color:var(--muted);
-  margin-bottom:4px;
   display:flex;
   align-items:center;
   gap:8px;
 }
+
 .avatar{
-  width:32px;
-  height:32px;
+  width:30px;
+  height:30px;
   border-radius:50%;
   object-fit:cover;
 }
 
-/* Input Area */
 #inputArea{
   display:flex;
-  align-items:center;
-  gap:8px;
   padding:10px;
-  background:#0f172a;
-}
-#messageInput{
-  flex:1;
-  padding:8px;
-  border-radius:8px;
-  border:none;
+  gap:8px;
 }
 
-/* Image Icon Button */
-#imageLabel{
-  font-size:22px;
-  cursor:pointer;
+#messageInput{
+  flex:1;
 }
+
 #imageInput{
   display:none;
 }
-button{
-  padding:8px 14px;
-  border:none;
-  border-radius:8px;
+
+#imageLabel{
+  font-size:22px;
   cursor:pointer;
-}
-footer{
-  text-align:center;
-  font-size:0.75rem;
-  padding:6px;
-  color:var(--muted);
-}
-footer a{
-  color:#38bdf8;
-  text-decoration:none;
 }
 </style>
 </head>
 <body>
 
-<div id="profileSetup">
-  <h2>Create Profile</h2>
-  <input type="text" id="profileName" placeholder="Your Name"><br>
-  <input type="text" id="profileOccupation" placeholder="Occupation"><br>
-  <input type="file" id="profileImage" accept="image/*"><br>
-  <button onclick="saveProfile()">Save</button>
+<!-- PROFILE SCREEN -->
+<div id="profileScreen" class="screen">
+  <h2>Create Your Profile</h2>
+  <input type="text" id="profileName" placeholder="Your Name">
+  <input type="text" id="profileOccupation" placeholder="Occupation">
+  <input type="file" id="profileImage" accept="image/*">
+  <button onclick="saveProfile()">Save Profile</button>
 </div>
 
-<div id="portal">
+<!-- PORTAL SCREEN -->
+<div id="portalScreen" class="screen">
   <button id="enterBtn">ENTER CHAT</button>
 </div>
 
+<!-- CHAT SCREEN -->
 <div id="chatApp">
   <header>
     <div id="welcome"></div>
@@ -170,11 +159,6 @@ footer a{
     <input type="file" id="imageInput" accept="image/*">
     <button onclick="sendMessage()">Send</button>
   </div>
-
-  <footer>
-    <a href="privacy.html">Privacy Policy</a> |
-    <a href="terms.html">Terms</a>
-  </footer>
 </div>
 
 <script type="module">
@@ -204,12 +188,7 @@ const db = getFirestore(app);
 let currentUser;
 let userData;
 
-document.getElementById("enterBtn").onclick=()=>{
-  document.getElementById("portal").style.display="none";
-  document.getElementById("chatApp").style.display="flex";
-  loadMessages();
-};
-
+/* AUTH CHECK */
 onAuthStateChanged(auth, async (user)=>{
   if(!user){
     window.location.href="index.html";
@@ -220,47 +199,41 @@ onAuthStateChanged(auth, async (user)=>{
   const ref=doc(db,"users",user.uid);
   const snap=await getDoc(ref);
 
-  if(!snap.exists() || !snap.data().username){
-    document.getElementById("profileSetup").style.display="block";
-    return;
+  if(!snap.exists()){
+    showScreen("profileScreen");
+  } else {
+    userData=snap.data();
+    showScreen("portalScreen");
   }
-
-  userData=snap.data();
-  document.getElementById("welcome").innerText=
-    userData.username+" • "+(userData.occupation||"");
 });
 
-/* Image Compression */
-function compressImage(file){
-  return new Promise(resolve=>{
-    const reader=new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload=e=>{
-      const img=new Image();
-      img.src=e.target.result;
-      img.onload=()=>{
-        const canvas=document.createElement("canvas");
-        const ctx=canvas.getContext("2d");
-        const maxWidth=600;
-        const scale=maxWidth/img.width;
-        canvas.width=maxWidth;
-        canvas.height=img.height*scale;
-        ctx.drawImage(img,0,0,canvas.width,canvas.height);
-        resolve(canvas.toDataURL("image/jpeg",0.6));
-      };
-    };
-  });
+/* SCREEN SWITCHER */
+function showScreen(id){
+  document.getElementById("profileScreen").style.display="none";
+  document.getElementById("portalScreen").style.display="none";
+  document.getElementById("chatApp").style.display="none";
+
+  document.getElementById(id).style.display=
+    id==="chatApp"?"flex":"block";
 }
 
-window.saveProfile=async()=>{
+/* SAVE PROFILE */
+window.saveProfile=async ()=>{
   const name=document.getElementById("profileName").value.trim();
   const occupation=document.getElementById("profileOccupation").value.trim();
   const file=document.getElementById("profileImage").files[0];
 
-  if(!name) return;
+  if(!name) return alert("Enter your name");
 
   let profilePic=null;
-  if(file) profilePic=await compressImage(file);
+
+  if(file){
+    const reader=new FileReader();
+    reader.readAsDataURL(file);
+    profilePic=await new Promise(resolve=>{
+      reader.onload=e=>resolve(e.target.result);
+    });
+  }
 
   await setDoc(doc(db,"users",currentUser.uid),{
     username:name,
@@ -272,6 +245,15 @@ window.saveProfile=async()=>{
   location.reload();
 };
 
+/* ENTER CHAT */
+document.getElementById("enterBtn").onclick=()=>{
+  showScreen("chatApp");
+  document.getElementById("welcome").innerText=
+    userData.username+" • "+(userData.occupation||"");
+  loadMessages();
+};
+
+/* LOAD MESSAGES */
 function loadMessages(){
   const q=query(collection(db,"messages"),orderBy("createdAt","asc"));
   onSnapshot(q,(snap)=>{
@@ -282,36 +264,29 @@ function loadMessages(){
       div.innerHTML+=`
         <div class="message">
           <div class="username">
-            ${m.profilePic ? `<img src="${m.profilePic}" class="avatar">` : ""}
+            ${m.profilePic?`<img src="${m.profilePic}" class="avatar">`:""}
             ${m.username}
           </div>
           ${m.text||""}
-          ${m.image?`<img src="${m.image}">`:""}
         </div>
       `;
     });
-    div.scrollTop=div.scrollHeight;
   });
 }
 
+/* SEND */
 window.sendMessage=async()=>{
   const text=document.getElementById("messageInput").value.trim();
-  const file=document.getElementById("imageInput").files[0];
-
-  let image=null;
-  if(file) image=await compressImage(file);
-  if(!text && !image) return;
+  if(!text) return;
 
   await addDoc(collection(db,"messages"),{
     username:userData.username,
     profilePic:userData.profilePic||null,
-    text:text||"",
-    image:image||null,
+    text:text,
     createdAt:serverTimestamp()
   });
 
   document.getElementById("messageInput").value="";
-  document.getElementById("imageInput").value="";
 };
 
 window.logout=async()=>{
