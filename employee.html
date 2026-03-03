@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Iron Companies - Employee</title>
+<title>Iron Companies</title>
 
 <style>
 :root{
@@ -27,17 +27,28 @@ body{
   align-items:center;
 }
 
+/* Profile Setup */
+#profileSetup{
+  display:none;
+  text-align:center;
+}
+#profileSetup input{
+  padding:8px;
+  margin:6px;
+  border-radius:6px;
+  border:none;
+}
+
 /* Portal */
 #portal{
   text-align:center;
 }
-
 #enterBtn{
-  width:230px;
-  height:230px;
-  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  width:220px;
+  height:220px;
   border:none;
-  border-radius:18px;
+  border-radius:20px;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
   font-size:1.4rem;
   font-weight:bold;
   color:white;
@@ -45,13 +56,10 @@ body{
   display:flex;
   justify-content:center;
   align-items:center;
-  transition:0.3s;
   box-shadow:0 0 40px #2563eb55;
+  transition:0.3s;
 }
-
-#enterBtn:hover{
-  transform:scale(1.08);
-}
+#enterBtn:hover{transform:scale(1.07);}
 
 /* Chat */
 #chatApp{
@@ -60,66 +68,72 @@ body{
   width:100%;
   height:100%;
 }
-
 header{
-  padding:15px 20px;
+  padding:12px;
   background:#0f172a;
   display:flex;
   justify-content:space-between;
   align-items:center;
-  border-bottom:1px solid #334155;
 }
-
 #messages{
   flex:1;
   overflow-y:auto;
-  padding:20px;
+  padding:15px;
 }
-
 .message{
   background:var(--card);
-  padding:12px;
-  margin-bottom:12px;
+  padding:10px;
+  margin-bottom:10px;
   border-radius:12px;
 }
-
 .username{
   font-size:0.8rem;
   color:var(--muted);
-  margin-bottom:6px;
+  margin-bottom:4px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.avatar{
+  width:32px;
+  height:32px;
+  border-radius:50%;
+  object-fit:cover;
 }
 
-img{
-  max-width:200px;
-  border-radius:10px;
-  margin-top:8px;
-}
-
+/* Input Area */
 #inputArea{
   display:flex;
-  padding:12px;
+  align-items:center;
   gap:8px;
+  padding:10px;
   background:#0f172a;
 }
-
-input[type=text]{
+#messageInput{
   flex:1;
-  padding:10px;
+  padding:8px;
   border-radius:8px;
   border:none;
 }
 
+/* Image Icon Button */
+#imageLabel{
+  font-size:22px;
+  cursor:pointer;
+}
+#imageInput{
+  display:none;
+}
 button{
-  padding:10px 16px;
+  padding:8px 14px;
   border:none;
   border-radius:8px;
   cursor:pointer;
 }
-
 footer{
   text-align:center;
-  padding:8px;
   font-size:0.75rem;
+  padding:6px;
   color:var(--muted);
 }
 footer a{
@@ -129,6 +143,14 @@ footer a{
 </style>
 </head>
 <body>
+
+<div id="profileSetup">
+  <h2>Create Profile</h2>
+  <input type="text" id="profileName" placeholder="Your Name"><br>
+  <input type="text" id="profileOccupation" placeholder="Occupation"><br>
+  <input type="file" id="profileImage" accept="image/*"><br>
+  <button onclick="saveProfile()">Save</button>
+</div>
 
 <div id="portal">
   <button id="enterBtn">ENTER CHAT</button>
@@ -144,13 +166,14 @@ footer a{
 
   <div id="inputArea">
     <input type="text" id="messageInput" placeholder="Type message...">
+    <label id="imageLabel" for="imageInput">📷</label>
     <input type="file" id="imageInput" accept="image/*">
     <button onclick="sendMessage()">Send</button>
   </div>
 
   <footer>
     <a href="privacy.html">Privacy Policy</a> |
-    <a href="terms.html">Terms & Conditions</a>
+    <a href="terms.html">Terms</a>
   </footer>
 </div>
 
@@ -161,7 +184,7 @@ from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import {
   getFirestore, collection, addDoc, doc,
   getDoc, setDoc, query, orderBy,
-  onSnapshot, serverTimestamp, updateDoc
+  onSnapshot, serverTimestamp
 }
 from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
@@ -178,10 +201,9 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-let currentUser=null;
-let userData=null;
+let currentUser;
+let userData;
 
-/* Enter Chat */
 document.getElementById("enterBtn").onclick=()=>{
   document.getElementById("portal").style.display="none";
   document.getElementById("chatApp").style.display="flex";
@@ -198,46 +220,15 @@ onAuthStateChanged(auth, async (user)=>{
   const ref=doc(db,"users",user.uid);
   const snap=await getDoc(ref);
 
-  if(snap.exists()){
-    userData=snap.data();
-  } else {
-    const username="User"+Math.floor(Math.random()*9999);
-    await setDoc(ref,{
-      username:username,
-      online:true,
-      createdAt:new Date()
-    });
-    userData={username};
+  if(!snap.exists() || !snap.data().username){
+    document.getElementById("profileSetup").style.display="block";
+    return;
   }
 
-  await updateDoc(ref,{online:true,lastSeen:serverTimestamp()});
-
-  document.getElementById("welcome").innerText="Welcome "+userData.username;
-
-  window.addEventListener("beforeunload",()=>{
-    updateDoc(ref,{online:false,lastSeen:serverTimestamp()});
-  });
+  userData=snap.data();
+  document.getElementById("welcome").innerText=
+    userData.username+" • "+(userData.occupation||"");
 });
-
-/* Load Messages */
-function loadMessages(){
-  const q=query(collection(db,"messages"),orderBy("createdAt","asc"));
-  onSnapshot(q,(snap)=>{
-    const div=document.getElementById("messages");
-    div.innerHTML="";
-    snap.forEach(doc=>{
-      const m=doc.data();
-      div.innerHTML+=`
-        <div class="message">
-          <div class="username">${m.username}</div>
-          ${m.text || ""}
-          ${m.image ? `<img src="${m.image}">` : ""}
-        </div>
-      `;
-    });
-    div.scrollTop=div.scrollHeight;
-  });
-}
 
 /* Image Compression */
 function compressImage(file){
@@ -250,7 +241,7 @@ function compressImage(file){
       img.onload=()=>{
         const canvas=document.createElement("canvas");
         const ctx=canvas.getContext("2d");
-        const maxWidth=800;
+        const maxWidth=600;
         const scale=maxWidth/img.width;
         canvas.width=maxWidth;
         canvas.height=img.height*scale;
@@ -261,20 +252,59 @@ function compressImage(file){
   });
 }
 
-/* Send */
-window.sendMessage=async ()=>{
+window.saveProfile=async()=>{
+  const name=document.getElementById("profileName").value.trim();
+  const occupation=document.getElementById("profileOccupation").value.trim();
+  const file=document.getElementById("profileImage").files[0];
+
+  if(!name) return;
+
+  let profilePic=null;
+  if(file) profilePic=await compressImage(file);
+
+  await setDoc(doc(db,"users",currentUser.uid),{
+    username:name,
+    occupation:occupation||"",
+    profilePic:profilePic||null,
+    createdAt:new Date()
+  });
+
+  location.reload();
+};
+
+function loadMessages(){
+  const q=query(collection(db,"messages"),orderBy("createdAt","asc"));
+  onSnapshot(q,(snap)=>{
+    const div=document.getElementById("messages");
+    div.innerHTML="";
+    snap.forEach(doc=>{
+      const m=doc.data();
+      div.innerHTML+=`
+        <div class="message">
+          <div class="username">
+            ${m.profilePic ? `<img src="${m.profilePic}" class="avatar">` : ""}
+            ${m.username}
+          </div>
+          ${m.text||""}
+          ${m.image?`<img src="${m.image}">`:""}
+        </div>
+      `;
+    });
+    div.scrollTop=div.scrollHeight;
+  });
+}
+
+window.sendMessage=async()=>{
   const text=document.getElementById("messageInput").value.trim();
   const file=document.getElementById("imageInput").files[0];
+
   let image=null;
-
-  if(file){
-    image=await compressImage(file);
-  }
-
+  if(file) image=await compressImage(file);
   if(!text && !image) return;
 
   await addDoc(collection(db,"messages"),{
     username:userData.username,
+    profilePic:userData.profilePic||null,
     text:text||"",
     image:image||null,
     createdAt:serverTimestamp()
@@ -284,10 +314,11 @@ window.sendMessage=async ()=>{
   document.getElementById("imageInput").value="";
 };
 
-window.logout=async ()=>{
+window.logout=async()=>{
   await signOut(auth);
   window.location.href="index.html";
 };
 </script>
+
 </body>
 </html>
