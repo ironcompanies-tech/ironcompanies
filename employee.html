@@ -27,7 +27,6 @@ body{
   align-items:center;
 }
 
-/* Screens */
 .screen{
   display:none;
   width:100%;
@@ -36,7 +35,6 @@ body{
   text-align:center;
 }
 
-/* Inputs */
 input{
   width:100%;
   padding:10px;
@@ -45,7 +43,6 @@ input{
   border:none;
 }
 
-/* Buttons */
 button{
   border:none;
   border-radius:12px;
@@ -60,7 +57,7 @@ button:hover{
   transform:scale(1.05);
 }
 
-/* Portal Buttons (Smaller & Balanced) */
+/* Portal */
 .portal-buttons{
   display:flex;
   gap:20px;
@@ -69,12 +66,11 @@ button:hover{
 }
 
 .portal-btn{
-  width:160px;
-  height:160px;
+  width:150px;
+  height:150px;
   display:flex;
   align-items:center;
   justify-content:center;
-  font-size:1rem;
 }
 
 /* Chat */
@@ -111,6 +107,12 @@ header{
   margin-bottom:5px;
 }
 
+.chat-img{
+  max-width:100%;
+  border-radius:10px;
+  margin-top:8px;
+}
+
 #inputArea{
   display:flex;
   padding:10px;
@@ -120,11 +122,20 @@ header{
 #messageInput{
   flex:1;
 }
+
+#imageInput{
+  display:none;
+}
+
+#imageLabel{
+  font-size:22px;
+  cursor:pointer;
+}
 </style>
 </head>
 <body>
 
-<!-- PROFILE SCREEN -->
+<!-- PROFILE -->
 <div id="profileScreen" class="screen">
   <h2>Create Profile</h2>
   <input type="text" id="profileName" placeholder="Your Name">
@@ -132,7 +143,7 @@ header{
   <button onclick="saveProfile()">Save</button>
 </div>
 
-<!-- PORTAL SCREEN -->
+<!-- PORTAL -->
 <div id="portalScreen" class="screen">
   <h2>Welcome</h2>
   <br>
@@ -144,7 +155,7 @@ header{
   </div>
 </div>
 
-<!-- CHAT SCREEN -->
+<!-- CHAT -->
 <div id="chatApp">
   <header>
     <div id="welcome"></div>
@@ -155,6 +166,8 @@ header{
 
   <div id="inputArea">
     <input type="text" id="messageInput" placeholder="Type message...">
+    <label id="imageLabel" for="imageInput">📷</label>
+    <input type="file" id="imageInput" accept="image/*">
     <button onclick="sendMessage()">Send</button>
   </div>
 </div>
@@ -172,12 +185,9 @@ import {
 from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyD6c1k8BURliiSAwEOnT_HW1MaZjNhHJSM",
-  authDomain: "iron-companies.firebaseapp.com",
-  projectId: "iron-companies",
-  storageBucket: "iron-companies.firebasestorage.app",
-  messagingSenderId: "692492696732",
-  appId: "1:692492696732:web:cd29fc124ddc0fa014c159"
+  apiKey: "YOUR_KEY",
+  authDomain: "YOUR_DOMAIN",
+  projectId: "YOUR_PROJECT_ID",
 };
 
 const app = initializeApp(firebaseConfig);
@@ -187,7 +197,7 @@ const db = getFirestore(app);
 let currentUser;
 let userData;
 
-/* AUTH CHECK */
+/* AUTH */
 onAuthStateChanged(auth, async (user)=>{
   if(!user){
     window.location.href="index.html";
@@ -205,7 +215,6 @@ onAuthStateChanged(auth, async (user)=>{
   }
 });
 
-/* Screen switch */
 function showScreen(id){
   document.getElementById("profileScreen").style.display="none";
   document.getElementById("portalScreen").style.display="none";
@@ -215,15 +224,12 @@ function showScreen(id){
     id==="chatApp"?"flex":"block";
 }
 
-/* Save Profile */
-window.saveProfile = async ()=>{
+/* SAVE PROFILE */
+window.saveProfile=async()=>{
   const name=document.getElementById("profileName").value.trim();
   const occupation=document.getElementById("profileOccupation").value.trim();
 
-  if(!name){
-    alert("Enter name");
-    return;
-  }
+  if(!name) return alert("Enter name");
 
   await setDoc(doc(db,"users",currentUser.uid),{
     username:name,
@@ -234,7 +240,7 @@ window.saveProfile = async ()=>{
   location.reload();
 };
 
-/* Enter Chat */
+/* ENTER CHAT */
 document.getElementById("enterChatBtn").onclick=()=>{
   showScreen("chatApp");
   document.getElementById("welcome").innerText=
@@ -242,7 +248,7 @@ document.getElementById("enterChatBtn").onclick=()=>{
   loadMessages();
 };
 
-/* Load Messages */
+/* LOAD MESSAGES */
 function loadMessages(){
   const q=query(collection(db,"messages"),orderBy("createdAt","asc"));
   onSnapshot(q,(snap)=>{
@@ -253,25 +259,60 @@ function loadMessages(){
       div.innerHTML+=`
         <div class="message">
           <div class="username">${m.username}</div>
-          ${m.text}
+          ${m.text?`<div>${m.text}</div>`:""}
+          ${m.image?`<img src="${m.image}" class="chat-img">`:""}
         </div>
       `;
     });
   });
 }
 
-/* Send */
+/* COMPRESS IMAGE */
+function compressImage(file){
+  return new Promise(resolve=>{
+    const reader=new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload=e=>{
+      const img=new Image();
+      img.src=e.target.result;
+      img.onload=()=>{
+        const canvas=document.createElement("canvas");
+        const maxWidth=800;
+        const scale=maxWidth/img.width;
+        canvas.width=maxWidth;
+        canvas.height=img.height*scale;
+
+        const ctx=canvas.getContext("2d");
+        ctx.drawImage(img,0,0,canvas.width,canvas.height);
+
+        resolve(canvas.toDataURL("image/jpeg",0.6));
+      };
+    };
+  });
+}
+
+/* SEND MESSAGE */
 window.sendMessage=async()=>{
   const text=document.getElementById("messageInput").value.trim();
-  if(!text) return;
+  const imageFile=document.getElementById("imageInput").files[0];
+
+  if(!text && !imageFile) return;
+
+  let imageData=null;
+
+  if(imageFile){
+    imageData=await compressImage(imageFile);
+  }
 
   await addDoc(collection(db,"messages"),{
     username:userData.username,
-    text,
+    text:text||null,
+    image:imageData||null,
     createdAt:serverTimestamp()
   });
 
   document.getElementById("messageInput").value="";
+  document.getElementById("imageInput").value="";
 };
 
 window.logout=async()=>{
