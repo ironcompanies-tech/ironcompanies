@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Articles - Iron Companies</title>
+
+<style>
+body{
+  margin:0;
+  font-family:sans-serif;
+  background:#0f172a;
+  color:white;
+  padding:20px;
+}
+
+h1{color:#38bdf8;}
+
+input, textarea{
+  width:100%;
+  padding:10px;
+  margin:8px 0;
+  border:none;
+  border-radius:8px;
+}
+
+textarea{
+  height:150px;
+}
+
+button{
+  padding:10px 15px;
+  border:none;
+  border-radius:8px;
+  background:#2563eb;
+  color:white;
+  cursor:pointer;
+}
+
+.articleCard{
+  background:#1e293b;
+  padding:15px;
+  margin-top:20px;
+  border-radius:12px;
+}
+.meta{
+  font-size:0.8rem;
+  color:#94a3b8;
+}
+</style>
+</head>
+<body>
+
+<h1>Articles</h1>
+
+<h3>Publish Article</h3>
+<input type="text" id="title" placeholder="Title">
+<textarea id="content" placeholder="Write article..."></textarea>
+<button onclick="publish()">Publish</button>
+
+<hr style="margin:40px 0;">
+
+<h3>All Articles</h3>
+<div id="articles"></div>
+
+<br>
+<button onclick="window.location.href='employee.html'">Back to Chat</button>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, onAuthStateChanged }
+from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import {
+  getFirestore, collection, addDoc,
+  query, orderBy, onSnapshot, serverTimestamp
+}
+from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyD6c1k8BURliiSAwEOnT_HW1MaZjNhHJSM",
+  authDomain: "iron-companies.firebaseapp.com",
+  projectId: "iron-companies",
+  storageBucket: "iron-companies.firebasestorage.app",
+  messagingSenderId: "692492696732",
+  appId: "1:692492696732:web:cd29fc124ddc0fa014c159"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+let currentUser;
+
+onAuthStateChanged(auth,(user)=>{
+  if(!user){
+    window.location.href="index.html";
+  } else {
+    currentUser=user;
+    loadArticles();
+  }
+});
+
+window.publish = async ()=>{
+  const title=document.getElementById("title").value.trim();
+  const content=document.getElementById("content").value.trim();
+
+  if(!title || !content){
+    alert("Fill all fields");
+    return;
+  }
+
+  await addDoc(collection(db,"articles"),{
+    title,
+    content,
+    author:currentUser.email,
+    createdAt:serverTimestamp()
+  });
+
+  document.getElementById("title").value="";
+  document.getElementById("content").value="";
+};
+
+function loadArticles(){
+  const q=query(collection(db,"articles"),orderBy("createdAt","desc"));
+  onSnapshot(q,(snap)=>{
+    const container=document.getElementById("articles");
+    container.innerHTML="";
+    snap.forEach(doc=>{
+      const a=doc.data();
+      container.innerHTML+=`
+        <div class="articleCard">
+          <h3>${a.title}</h3>
+          <div class="meta">By ${a.author}</div>
+          <p>${a.content}</p>
+        </div>
+      `;
+    });
+  });
+}
+</script>
+
+</body>
+</html>
