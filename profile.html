@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>User Profile</title>
+
+<style>
+body{
+  margin:0;
+  font-family:sans-serif;
+  background:#0f172a;
+  color:white;
+  padding:20px;
+  text-align:center;
+}
+
+.profile-card{
+  background:#1e293b;
+  padding:20px;
+  border-radius:15px;
+  max-width:400px;
+  margin:auto;
+}
+
+.avatar{
+  width:120px;
+  height:120px;
+  border-radius:50%;
+  object-fit:cover;
+  margin-bottom:15px;
+}
+
+button{
+  margin-top:20px;
+  padding:10px 20px;
+  border:none;
+  border-radius:10px;
+  background:#2563eb;
+  color:white;
+  cursor:pointer;
+}
+</style>
+</head>
+<body>
+
+<div class="profile-card">
+  <img id="avatar" class="avatar" src="">
+  <h2 id="username"></h2>
+  <p id="occupation"></p>
+  <button onclick="goBack()">Back</button>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, doc, getDoc }
+from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyD6c1k8BURliiSAwEOnT_HW1MaZjNhHJSM",
+  authDomain: "iron-companies.firebaseapp.com",
+  projectId: "iron-companies",
+  storageBucket: "iron-companies.firebasestorage.app",
+  messagingSenderId: "692492696732",
+  appId: "1:692492696732:web:cd29fc124ddc0fa014c159"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+/* Get userId from URL */
+const params = new URLSearchParams(window.location.search);
+const userId = params.get("uid");
+
+if(userId){
+  const snap = await getDoc(doc(db,"users",userId));
+  if(snap.exists()){
+    const data = snap.data();
+    document.getElementById("username").innerText = data.username;
+    document.getElementById("occupation").innerText = data.occupation || "";
+    if(data.profilePic){
+      document.getElementById("avatar").src = data.profilePic;
+    }
+  }
+}
+
+window.goBack = ()=>{
+  window.history.back();
+};
+</script>
+
+</body>
+</html>
