@@ -29,10 +29,19 @@ body{
   border-radius:50%;
   object-fit:cover;
   margin-bottom:15px;
+  cursor:pointer;
+}
+
+input{
+  width:100%;
+  padding:10px;
+  margin:8px 0;
+  border-radius:8px;
+  border:none;
 }
 
 button{
-  margin-top:20px;
+  margin-top:10px;
   padding:10px 20px;
   border:none;
   border-radius:10px;
@@ -40,20 +49,37 @@ button{
   color:white;
   cursor:pointer;
 }
+
+.hidden{
+  display:none;
+}
 </style>
 </head>
 <body>
 
 <div class="profile-card">
   <img id="avatar" class="avatar" src="">
+  <input type="file" id="imageInput" class="hidden" accept="image/*">
+
   <h2 id="username"></h2>
   <p id="occupation"></p>
+
+  <div id="editSection" class="hidden">
+    <input type="text" id="editName">
+    <input type="text" id="editOccupation">
+    <button onclick="updateProfile()">Update Profile</button>
+  </div>
+
   <button onclick="goBack()">Back</button>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, doc, getDoc }
+import { getAuth, onAuthStateChanged }
+from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import {
+  getFirestore, doc, getDoc, updateDoc
+}
 from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -67,22 +93,86 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+const auth = getAuth(app);
 
-/* Get userId from URL */
 const params = new URLSearchParams(window.location.search);
 const userId = params.get("uid");
 
-if(userId){
-  const snap = await getDoc(doc(db,"users",userId));
-  if(snap.exists()){
-    const data = snap.data();
-    document.getElementById("username").innerText = data.username;
-    document.getElementById("occupation").innerText = data.occupation || "";
-    if(data.profilePic){
-      document.getElementById("avatar").src = data.profilePic;
+let currentUser;
+let profileData;
+
+onAuthStateChanged(auth, async(user)=>{
+  if(!user) return;
+
+  currentUser = user;
+
+  if(userId){
+    const snap = await getDoc(doc(db,"users",userId));
+    if(snap.exists()){
+      profileData = snap.data();
+
+      document.getElementById("username").innerText = profileData.username;
+      document.getElementById("occupation").innerText = profileData.occupation || "";
+
+      if(profileData.profilePic){
+        document.getElementById("avatar").src = profileData.profilePic;
+      }
+
+      // If viewing own profile → allow edit
+      if(user.uid === userId){
+        document.getElementById("editSection").classList.remove("hidden");
+        document.getElementById("editName").value = profileData.username;
+        document.getElementById("editOccupation").value = profileData.occupation || "";
+        document.getElementById("avatar").onclick = ()=>{
+          document.getElementById("imageInput").click();
+        };
+      }
     }
   }
+});
+
+/* Compress Image */
+function compressImage(file){
+  return new Promise(resolve=>{
+    const reader=new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload=e=>{
+      const img=new Image();
+      img.src=e.target.result;
+      img.onload=()=>{
+        const canvas=document.createElement("canvas");
+        const maxWidth=600;
+        const scale=maxWidth/img.width;
+        canvas.width=maxWidth;
+        canvas.height=img.height*scale;
+        const ctx=canvas.getContext("2d");
+        ctx.drawImage(img,0,0,canvas.width,canvas.height);
+        resolve(canvas.toDataURL("image/jpeg",0.6));
+      };
+    };
+  });
 }
+
+window.updateProfile = async()=>{
+  const newName = document.getElementById("editName").value.trim();
+  const newOcc = document.getElementById("editOccupation").value.trim();
+  const imageFile = document.getElementById("imageInput").files[0];
+
+  let imageData = profileData.profilePic || null;
+
+  if(imageFile){
+    imageData = await compressImage(imageFile);
+  }
+
+  await updateDoc(doc(db,"users",currentUser.uid),{
+    username:newName,
+    occupation:newOcc,
+    profilePic:imageData
+  });
+
+  alert("Profile Updated");
+  location.reload();
+};
 
 window.goBack = ()=>{
   window.history.back();
