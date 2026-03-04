@@ -107,6 +107,12 @@ header{
   margin-top:8px;
 }
 
+.view-btn{
+  margin-top:6px;
+  font-size:0.7rem;
+  padding:4px 8px;
+}
+
 #inputArea{
   display:flex;
   padding:10px;
@@ -129,7 +135,7 @@ header{
 </head>
 <body>
 
-<!-- PROFILE -->
+<!-- PROFILE CREATION -->
 <div id="profileScreen" class="screen">
   <h2>Create Profile</h2>
   <input type="text" id="profileName" placeholder="Your Name">
@@ -194,6 +200,7 @@ const db = getFirestore(app);
 let currentUser;
 let userData;
 
+/* AUTH CHECK */
 onAuthStateChanged(auth, async (user)=>{
   if(!user){
     window.location.href="index.html";
@@ -215,11 +222,11 @@ function showScreen(id){
   document.getElementById("profileScreen").style.display="none";
   document.getElementById("portalScreen").style.display="none";
   document.getElementById("chatApp").style.display="none";
-
-  document.getElementById(id).style.display=
+  document.getElementById(id).style.display =
     id==="chatApp"?"flex":"block";
 }
 
+/* SAVE PROFILE */
 window.saveProfile=async()=>{
   const name=document.getElementById("profileName").value.trim();
   const occupation=document.getElementById("profileOccupation").value.trim();
@@ -234,31 +241,40 @@ window.saveProfile=async()=>{
   location.reload();
 };
 
+/* ENTER CHAT */
 document.getElementById("enterChatBtn").onclick=()=>{
   showScreen("chatApp");
-  document.getElementById("welcome").innerText=
+  document.getElementById("welcome").innerText =
     userData.username+" • "+(userData.occupation||"");
   loadMessages();
 };
 
+/* LOAD MESSAGES */
 function loadMessages(){
   const q=query(collection(db,"messages"),orderBy("createdAt","asc"));
   onSnapshot(q,(snap)=>{
     const div=document.getElementById("messages");
     div.innerHTML="";
-    snap.forEach(doc=>{
-      const m=doc.data();
+    snap.forEach(docSnap=>{
+      const m=docSnap.data();
       div.innerHTML+=`
         <div class="message">
           <div class="username">${m.username}</div>
           ${m.text?`<div>${m.text}</div>`:""}
           ${m.image?`<img src="${m.image}" class="chat-img">`:""}
+          ${m.uid?`
+            <button class="view-btn"
+              onclick="viewProfile('${m.uid}')">
+              View Profile
+            </button>
+          `:""}
         </div>
       `;
     });
   });
 }
 
+/* IMAGE COMPRESSION */
 function compressImage(file){
   return new Promise(resolve=>{
     const reader=new FileReader();
@@ -280,6 +296,7 @@ function compressImage(file){
   });
 }
 
+/* SEND MESSAGE */
 window.sendMessage=async()=>{
   const text=document.getElementById("messageInput").value.trim();
   const imageFile=document.getElementById("imageInput").files[0];
@@ -292,6 +309,7 @@ window.sendMessage=async()=>{
 
   await addDoc(collection(db,"messages"),{
     username:userData.username,
+    uid:currentUser.uid,
     text:text||null,
     image:imageData||null,
     createdAt:serverTimestamp()
@@ -299,6 +317,11 @@ window.sendMessage=async()=>{
 
   document.getElementById("messageInput").value="";
   document.getElementById("imageInput").value="";
+};
+
+/* VIEW PROFILE */
+window.viewProfile=(uid)=>{
+  window.location.href="profile.html?uid="+uid;
 };
 
 window.logout=async()=>{
