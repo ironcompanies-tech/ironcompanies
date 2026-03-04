@@ -36,6 +36,7 @@ body{
   text-align:center;
 }
 
+/* Inputs */
 input{
   width:100%;
   padding:10px;
@@ -44,25 +45,36 @@ input{
   border:none;
 }
 
+/* Buttons */
 button{
-  padding:10px 16px;
   border:none;
-  border-radius:8px;
+  border-radius:12px;
   cursor:pointer;
   background:linear-gradient(135deg,var(--accent),var(--accent2));
   color:white;
   font-weight:bold;
+  transition:0.2s;
 }
 
-/* Square Portal Button */
-#enterBtn{
-  width:220px;
-  height:220px;
+button:hover{
+  transform:scale(1.05);
+}
+
+/* Portal Buttons (Smaller & Balanced) */
+.portal-buttons{
   display:flex;
+  gap:20px;
   justify-content:center;
+  flex-wrap:wrap;
+}
+
+.portal-btn{
+  width:160px;
+  height:160px;
+  display:flex;
   align-items:center;
-  margin:auto;
-  font-size:1.2rem;
+  justify-content:center;
+  font-size:1rem;
 }
 
 /* Chat */
@@ -96,16 +108,7 @@ header{
 .username{
   font-size:0.8rem;
   color:var(--muted);
-  display:flex;
-  align-items:center;
-  gap:8px;
-}
-
-.avatar{
-  width:30px;
-  height:30px;
-  border-radius:50%;
-  object-fit:cover;
+  margin-bottom:5px;
 }
 
 #inputArea{
@@ -117,31 +120,28 @@ header{
 #messageInput{
   flex:1;
 }
-
-#imageInput{
-  display:none;
-}
-
-#imageLabel{
-  font-size:22px;
-  cursor:pointer;
-}
 </style>
 </head>
 <body>
 
 <!-- PROFILE SCREEN -->
 <div id="profileScreen" class="screen">
-  <h2>Create Your Profile</h2>
+  <h2>Create Profile</h2>
   <input type="text" id="profileName" placeholder="Your Name">
   <input type="text" id="profileOccupation" placeholder="Occupation">
-  <input type="file" id="profileImage" accept="image/*">
-  <button onclick="saveProfile()">Save Profile</button>
+  <button onclick="saveProfile()">Save</button>
 </div>
 
 <!-- PORTAL SCREEN -->
 <div id="portalScreen" class="screen">
-  <button id="enterBtn">ENTER CHAT</button>
+  <h2>Welcome</h2>
+  <br>
+  <div class="portal-buttons">
+    <button class="portal-btn" id="enterChatBtn">Join Chat</button>
+    <button class="portal-btn" onclick="window.location.href='articles.html'">
+      Articles
+    </button>
+  </div>
 </div>
 
 <!-- CHAT SCREEN -->
@@ -155,8 +155,6 @@ header{
 
   <div id="inputArea">
     <input type="text" id="messageInput" placeholder="Type message...">
-    <label id="imageLabel" for="imageInput">📷</label>
-    <input type="file" id="imageInput" accept="image/*">
     <button onclick="sendMessage()">Send</button>
   </div>
 </div>
@@ -166,9 +164,10 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/fireba
 import { getAuth, onAuthStateChanged, signOut }
 from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import {
-  getFirestore, collection, addDoc, doc,
-  getDoc, setDoc, query, orderBy,
-  onSnapshot, serverTimestamp
+  getFirestore, collection, addDoc,
+  doc, getDoc, setDoc,
+  query, orderBy, onSnapshot,
+  serverTimestamp
 }
 from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
@@ -196,8 +195,7 @@ onAuthStateChanged(auth, async (user)=>{
   }
 
   currentUser=user;
-  const ref=doc(db,"users",user.uid);
-  const snap=await getDoc(ref);
+  const snap=await getDoc(doc(db,"users",user.uid));
 
   if(!snap.exists()){
     showScreen("profileScreen");
@@ -207,7 +205,7 @@ onAuthStateChanged(auth, async (user)=>{
   }
 });
 
-/* SCREEN SWITCHER */
+/* Screen switch */
 function showScreen(id){
   document.getElementById("profileScreen").style.display="none";
   document.getElementById("portalScreen").style.display="none";
@@ -217,43 +215,34 @@ function showScreen(id){
     id==="chatApp"?"flex":"block";
 }
 
-/* SAVE PROFILE */
-window.saveProfile=async ()=>{
+/* Save Profile */
+window.saveProfile = async ()=>{
   const name=document.getElementById("profileName").value.trim();
   const occupation=document.getElementById("profileOccupation").value.trim();
-  const file=document.getElementById("profileImage").files[0];
 
-  if(!name) return alert("Enter your name");
-
-  let profilePic=null;
-
-  if(file){
-    const reader=new FileReader();
-    reader.readAsDataURL(file);
-    profilePic=await new Promise(resolve=>{
-      reader.onload=e=>resolve(e.target.result);
-    });
+  if(!name){
+    alert("Enter name");
+    return;
   }
 
   await setDoc(doc(db,"users",currentUser.uid),{
     username:name,
     occupation:occupation||"",
-    profilePic:profilePic||null,
     createdAt:new Date()
   });
 
   location.reload();
 };
 
-/* ENTER CHAT */
-document.getElementById("enterBtn").onclick=()=>{
+/* Enter Chat */
+document.getElementById("enterChatBtn").onclick=()=>{
   showScreen("chatApp");
   document.getElementById("welcome").innerText=
     userData.username+" • "+(userData.occupation||"");
   loadMessages();
 };
 
-/* LOAD MESSAGES */
+/* Load Messages */
 function loadMessages(){
   const q=query(collection(db,"messages"),orderBy("createdAt","asc"));
   onSnapshot(q,(snap)=>{
@@ -263,26 +252,22 @@ function loadMessages(){
       const m=doc.data();
       div.innerHTML+=`
         <div class="message">
-          <div class="username">
-            ${m.profilePic?`<img src="${m.profilePic}" class="avatar">`:""}
-            ${m.username}
-          </div>
-          ${m.text||""}
+          <div class="username">${m.username}</div>
+          ${m.text}
         </div>
       `;
     });
   });
 }
 
-/* SEND */
+/* Send */
 window.sendMessage=async()=>{
   const text=document.getElementById("messageInput").value.trim();
   if(!text) return;
 
   await addDoc(collection(db,"messages"),{
     username:userData.username,
-    profilePic:userData.profilePic||null,
-    text:text,
+    text,
     createdAt:serverTimestamp()
   });
 
