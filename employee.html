@@ -107,12 +107,10 @@ header{
   margin-top:8px;
 }
 
-.profile-thumb{
-  width:35px;
-  height:35px;
-  border-radius:50%;
-  cursor:pointer;
+.view-btn{
   margin-top:6px;
+  font-size:0.7rem;
+  padding:4px 8px;
 }
 
 #inputArea{
@@ -202,6 +200,7 @@ const db = getFirestore(app);
 let currentUser;
 let userData;
 
+/* AUTH CHECK */
 onAuthStateChanged(auth, async (user)=>{
   if(!user){
     window.location.href="index.html";
@@ -227,6 +226,7 @@ function showScreen(id){
     id==="chatApp"?"flex":"block";
 }
 
+/* SAVE PROFILE */
 window.saveProfile=async()=>{
   const name=document.getElementById("profileName").value.trim();
   const occupation=document.getElementById("profileOccupation").value.trim();
@@ -235,13 +235,13 @@ window.saveProfile=async()=>{
   await setDoc(doc(db,"users",currentUser.uid),{
     username:name,
     occupation:occupation||"",
-    profilePic:null,
     createdAt:new Date()
   });
 
   location.reload();
 };
 
+/* ENTER CHAT */
 document.getElementById("enterChatBtn").onclick=()=>{
   showScreen("chatApp");
   document.getElementById("welcome").innerText =
@@ -249,6 +249,7 @@ document.getElementById("enterChatBtn").onclick=()=>{
   loadMessages();
 };
 
+/* LOAD MESSAGES */
 function loadMessages(){
   const q=query(collection(db,"messages"),orderBy("createdAt","asc"));
   onSnapshot(q,(snap)=>{
@@ -261,10 +262,11 @@ function loadMessages(){
           <div class="username">${m.username}</div>
           ${m.text?`<div>${m.text}</div>`:""}
           ${m.image?`<img src="${m.image}" class="chat-img">`:""}
-          ${m.profilePic?`
-            <img src="${m.profilePic}" 
-                 class="profile-thumb"
-                 onclick="viewProfile('${m.uid}')">
+          ${m.uid?`
+            <button class="view-btn"
+              onclick="viewProfile('${m.uid}')">
+              View Profile
+            </button>
           `:""}
         </div>
       `;
@@ -272,6 +274,7 @@ function loadMessages(){
   });
 }
 
+/* IMAGE COMPRESSION */
 function compressImage(file){
   return new Promise(resolve=>{
     const reader=new FileReader();
@@ -293,6 +296,7 @@ function compressImage(file){
   });
 }
 
+/* SEND MESSAGE */
 window.sendMessage=async()=>{
   const text=document.getElementById("messageInput").value.trim();
   const imageFile=document.getElementById("imageInput").files[0];
@@ -306,7 +310,6 @@ window.sendMessage=async()=>{
   await addDoc(collection(db,"messages"),{
     username:userData.username,
     uid:currentUser.uid,
-    profilePic:userData.profilePic || null,
     text:text||null,
     image:imageData||null,
     createdAt:serverTimestamp()
@@ -316,6 +319,7 @@ window.sendMessage=async()=>{
   document.getElementById("imageInput").value="";
 };
 
+/* VIEW PROFILE */
 window.viewProfile=(uid)=>{
   window.location.href="profile.html?uid="+uid;
 };
