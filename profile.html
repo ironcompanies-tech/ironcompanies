@@ -1,200 +1,182 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Update Profile</title>
-
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&display=swap" rel="stylesheet">
+<title>User Profile</title>
 
 <style>
-
 body{
-margin:0;
-font-family:'Orbitron',sans-serif;
-background:radial-gradient(circle at top,#0f1c4d,#020617 70%);
-color:#00eaff;
-display:flex;
-justify-content:center;
-align-items:center;
-height:100vh;
+  margin:0;
+  font-family:sans-serif;
+  background:#0f172a;
+  color:white;
+  padding:20px;
+  text-align:center;
 }
 
-.container{
-background:#0b1330;
-padding:30px;
-border-radius:15px;
-width:320px;
-text-align:center;
-box-shadow:0 0 25px #00eaff33;
+.profile-card{
+  background:#1e293b;
+  padding:20px;
+  border-radius:15px;
+  max-width:400px;
+  margin:auto;
 }
 
-img{
-width:100px;
-height:100px;
-border-radius:50%;
-object-fit:cover;
-margin-bottom:15px;
-border:3px solid #00eaff;
+.avatar{
+  width:120px;
+  height:120px;
+  border-radius:50%;
+  object-fit:cover;
+  margin-bottom:15px;
+  cursor:pointer;
 }
 
 input{
-width:100%;
-padding:10px;
-margin-bottom:12px;
-border-radius:8px;
-border:1px solid #00eaff55;
-background:#020617;
-color:#00eaff;
+  width:100%;
+  padding:10px;
+  margin:8px 0;
+  border-radius:8px;
+  border:none;
 }
 
 button{
-width:100%;
-padding:10px;
-border:none;
-border-radius:8px;
-background:linear-gradient(90deg,#00eaff,#00bcd4);
-color:black;
-font-weight:bold;
-cursor:pointer;
+  margin-top:10px;
+  padding:10px 20px;
+  border:none;
+  border-radius:10px;
+  background:#2563eb;
+  color:white;
+  cursor:pointer;
 }
 
+.hidden{
+  display:none;
+}
 </style>
 </head>
-
 <body>
 
-<div class="container">
+<div class="profile-card">
+  <img id="avatar" class="avatar" src="">
+  <input type="file" id="imageInput" class="hidden" accept="image/*">
 
-<h2>Update Profile</h2>
+  <h2 id="username"></h2>
+  <p id="occupation"></p>
 
-<img id="preview" src="">
+  <div id="editSection" class="hidden">
+    <input type="text" id="editName">
+    <input type="text" id="editOccupation">
+    <button onclick="updateProfile()">Update Profile</button>
+  </div>
 
-<input type="file" id="imageInput">
-
-<input id="name" placeholder="Your Name">
-
-<input id="occupation" placeholder="Occupation">
-
-<button onclick="saveProfile()">Save Profile</button>
-
+  <button onclick="goBack()">Back</button>
 </div>
 
 <script type="module">
-
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getAuth,onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore,doc,getDoc,updateDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getAuth, onAuthStateChanged }
+from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import {
+  getFirestore, doc, getDoc, updateDoc
+}
+from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
-apiKey:"AIzaSyD6c1k8BURliiSAwEOnT_HW1MaZjNhHJSM",
-authDomain:"iron-companies.firebaseapp.com",
-projectId:"iron-companies",
-storageBucket:"iron-companies.firebasestorage.app",
-messagingSenderId:"692492696732",
-appId:"1:692492696732:web:cd29fc124ddc0fa014c159"
+  apiKey: "AIzaSyD6c1k8BURliiSAwEOnT_HW1MaZjNhHJSM",
+  authDomain: "iron-companies.firebaseapp.com",
+  projectId: "iron-companies",
+  storageBucket: "iron-companies.firebasestorage.app",
+  messagingSenderId: "692492696732",
+  appId: "1:692492696732:web:cd29fc124ddc0fa014c159"
 };
 
-const app=initializeApp(firebaseConfig);
-const auth=getAuth(app);
-const db=getFirestore(app);
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
 
-let uid=null;
-let imageBase64=null;
+const params = new URLSearchParams(window.location.search);
+const userId = params.get("uid");
 
-onAuthStateChanged(auth,async(user)=>{
+let currentUser;
+let profileData;
 
-if(!user){
-window.location.href="index.html";
-return;
-}
+onAuthStateChanged(auth, async(user)=>{
+  if(!user) return;
 
-uid=user.uid;
+  currentUser = user;
 
-const docRef=doc(db,"users",uid);
-const snap=await getDoc(docRef);
+  if(userId){
+    const snap = await getDoc(doc(db,"users",userId));
+    if(snap.exists()){
+      profileData = snap.data();
 
-if(snap.exists()){
+      document.getElementById("username").innerText = profileData.username;
+      document.getElementById("occupation").innerText = profileData.occupation || "";
 
-const data=snap.data();
+      if(profileData.profilePic){
+        document.getElementById("avatar").src = profileData.profilePic;
+      }
 
-document.getElementById("name").value=data.name || "";
-document.getElementById("occupation").value=data.occupation || "";
-
-if(data.photo){
-document.getElementById("preview").src=data.photo;
-}
-
-}
-
+      // If viewing own profile → allow edit
+      if(user.uid === userId){
+        document.getElementById("editSection").classList.remove("hidden");
+        document.getElementById("editName").value = profileData.username;
+        document.getElementById("editOccupation").value = profileData.occupation || "";
+        document.getElementById("avatar").onclick = ()=>{
+          document.getElementById("imageInput").click();
+        };
+      }
+    }
+  }
 });
 
-document.getElementById("imageInput").addEventListener("change",async(e)=>{
-
-const file=e.target.files[0];
-
-if(!file) return;
-
-const img=new Image();
-const reader=new FileReader();
-
-reader.onload=function(event){
-img.src=event.target.result;
+/* Compress Image */
+function compressImage(file){
+  return new Promise(resolve=>{
+    const reader=new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload=e=>{
+      const img=new Image();
+      img.src=e.target.result;
+      img.onload=()=>{
+        const canvas=document.createElement("canvas");
+        const maxWidth=600;
+        const scale=maxWidth/img.width;
+        canvas.width=maxWidth;
+        canvas.height=img.height*scale;
+        const ctx=canvas.getContext("2d");
+        ctx.drawImage(img,0,0,canvas.width,canvas.height);
+        resolve(canvas.toDataURL("image/jpeg",0.6));
+      };
+    };
+  });
 }
 
-img.onload=function(){
+window.updateProfile = async()=>{
+  const newName = document.getElementById("editName").value.trim();
+  const newOcc = document.getElementById("editOccupation").value.trim();
+  const imageFile = document.getElementById("imageInput").files[0];
 
-const canvas=document.createElement("canvas");
-const ctx=canvas.getContext("2d");
+  let imageData = profileData.profilePic || null;
 
-const maxSize=300;
+  if(imageFile){
+    imageData = await compressImage(imageFile);
+  }
 
-let width=img.width;
-let height=img.height;
+  await updateDoc(doc(db,"users",currentUser.uid),{
+    username:newName,
+    occupation:newOcc,
+    profilePic:imageData
+  });
 
-if(width>height){
-if(width>maxSize){
-height*=maxSize/width;
-width=maxSize;
-}
-}else{
-if(height>maxSize){
-width*=maxSize/height;
-height=maxSize;
-}
-}
-
-canvas.width=width;
-canvas.height=height;
-
-ctx.drawImage(img,0,0,width,height);
-
-imageBase64=canvas.toDataURL("image/jpeg",0.7);
-
-document.getElementById("preview").src=imageBase64;
-
+  alert("Profile Updated");
+  location.reload();
 };
 
-reader.readAsDataURL(file);
-
-});
-
-window.saveProfile=async()=>{
-
-if(!uid) return;
-
-await updateDoc(doc(db,"users",uid),{
-
-name:document.getElementById("name").value,
-occupation:document.getElementById("occupation").value,
-photo:imageBase64 || null
-
-});
-
-alert("Profile updated");
-
+window.goBack = ()=>{
+  window.history.back();
 };
-
 </script>
 
 </body>
