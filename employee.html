@@ -2,332 +2,272 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Iron Companies</title>
+<title>Iron Companies Chat</title>
 
 <style>
-:root{
-  --bg1:#0f172a;
-  --bg2:#1e293b;
-  --accent:#2563eb;
-  --accent2:#38bdf8;
-  --card:#1e293b;
-  --text:#f1f5f9;
-  --muted:#94a3b8;
-}
-
-*{box-sizing:border-box;margin:0;padding:0;font-family:sans-serif;}
 
 body{
-  background:linear-gradient(135deg,var(--bg1),var(--bg2));
-  color:var(--text);
-  height:100vh;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-}
-
-.screen{
-  display:none;
-  width:100%;
-  max-width:500px;
-  padding:20px;
-  text-align:center;
-}
-
-input{
-  width:100%;
-  padding:10px;
-  margin:8px 0;
-  border-radius:8px;
-  border:none;
-}
-
-button{
-  border:none;
-  border-radius:12px;
-  cursor:pointer;
-  background:linear-gradient(135deg,var(--accent),var(--accent2));
-  color:white;
-  font-weight:bold;
-}
-
-.portal-buttons{
-  display:flex;
-  gap:20px;
-  justify-content:center;
-  flex-wrap:wrap;
-}
-
-.portal-btn{
-  width:150px;
-  height:150px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-}
-
-/* Chat */
-#chatApp{
-  display:none;
-  flex-direction:column;
-  width:100%;
-  height:100vh;
+font-family:Arial;
+background:#f2f6ff;
+margin:0;
 }
 
 header{
-  padding:10px;
-  display:flex;
-  justify-content:space-between;
-  background:#0f172a;
+background:#4a6cf7;
+color:white;
+padding:12px;
+display:flex;
+align-items:center;
+justify-content:space-between;
 }
 
-#messages{
-  flex:1;
-  overflow-y:auto;
-  padding:10px;
+#profileBtn{
+width:40px;
+height:40px;
+border-radius:50%;
+cursor:pointer;
+border:2px solid white;
+}
+
+#chatBox{
+height:70vh;
+overflow-y:auto;
+padding:10px;
+background:white;
 }
 
 .message{
-  background:var(--card);
-  padding:10px;
-  border-radius:10px;
-  margin-bottom:10px;
+max-width:60%;
+padding:10px;
+margin:8px;
+border-radius:12px;
 }
 
-.username{
-  font-size:0.8rem;
-  color:var(--muted);
-  margin-bottom:5px;
+.me{
+background:#4a6cf7;
+color:white;
+margin-left:auto;
+text-align:right;
 }
 
-.chat-img{
-  max-width:100%;
-  border-radius:10px;
-  margin-top:8px;
+.other{
+background:#e4e8ff;
+color:black;
+margin-right:auto;
 }
 
-.view-btn{
-  margin-top:6px;
-  font-size:0.7rem;
-  padding:4px 8px;
-}
-
-#inputArea{
-  display:flex;
-  padding:10px;
-  gap:8px;
+#sendArea{
+display:flex;
+padding:10px;
+background:#f7f7f7;
 }
 
 #messageInput{
-  flex:1;
+flex:1;
+padding:10px;
+border-radius:10px;
+border:1px solid #ccc;
 }
 
-#imageInput{
-  display:none;
+button{
+margin-left:5px;
+padding:10px 15px;
+border:none;
+border-radius:10px;
+background:#4a6cf7;
+color:white;
+cursor:pointer;
 }
 
-#imageLabel{
-  font-size:22px;
-  cursor:pointer;
+.bigButtons{
+display:flex;
+justify-content:center;
+gap:20px;
+margin:15px;
 }
+
+.bigBtn{
+width:180px;
+height:80px;
+font-size:18px;
+background:#6c85ff;
+border-radius:15px;
+display:flex;
+align-items:center;
+justify-content:center;
+cursor:pointer;
+color:white;
+}
+
+footer{
+text-align:center;
+padding:10px;
+font-size:14px;
+}
+
+footer a{
+margin:10px;
+text-decoration:none;
+color:#4a6cf7;
+}
+
 </style>
 </head>
+
 <body>
 
-<!-- PROFILE CREATION -->
-<div id="profileScreen" class="screen">
-  <h2>Create Profile</h2>
-  <input type="text" id="profileName" placeholder="Your Name">
-  <input type="text" id="profileOccupation" placeholder="Occupation">
-  <button onclick="saveProfile()">Save</button>
+<header>
+
+<img id="profileBtn" src="default.png" onclick="window.location='profile.html'">
+
+<div>Iron Companies Chat</div>
+
+<div id="onlineIndicator">🟢 Online</div>
+
+</header>
+
+<div class="bigButtons">
+
+<div class="bigBtn" onclick="openChat()">Join Chat</div>
+
+<div class="bigBtn" onclick="window.location='articles.html'">Articles</div>
+
 </div>
 
-<!-- PORTAL -->
-<div id="portalScreen" class="screen">
-  <h2>Welcome</h2>
-  <br>
-  <div class="portal-buttons">
-    <button class="portal-btn" id="enterChatBtn">Join Chat</button>
-    <button class="portal-btn" onclick="window.location.href='articles.html'">
-      Articles
-    </button>
-  </div>
+<div id="chatBox"></div>
+
+<div id="sendArea">
+
+<input id="messageInput" placeholder="Type message">
+
+<input type="file" id="imageInput">
+
+<button onclick="sendMessage()">Send</button>
+
 </div>
 
-<!-- CHAT -->
-<div id="chatApp">
-  <header>
-    <div id="welcome"></div>
-    <button onclick="logout()">Logout</button>
-  </header>
+<footer>
 
-  <div id="messages"></div>
+<a href="privacy.html">Privacy Policy</a>
 
-  <div id="inputArea">
-    <input type="text" id="messageInput" placeholder="Type message...">
-    <label id="imageLabel" for="imageInput">📷</label>
-    <input type="file" id="imageInput" accept="image/*">
-    <button onclick="sendMessage()">Send</button>
-  </div>
-</div>
+<a href="terms.html">Terms & Conditions</a>
+
+</footer>
 
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getAuth, onAuthStateChanged, signOut }
-from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+
 import {
-  getFirestore, collection, addDoc,
-  doc, getDoc, setDoc,
-  query, orderBy, onSnapshot,
-  serverTimestamp
-}
-from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+getFirestore,
+collection,
+addDoc,
+onSnapshot
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+import {
+getAuth
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
 
 const firebaseConfig = {
-  apiKey: "AIzaSyD6c1k8BURliiSAwEOnT_HW1MaZjNhHJSM",
-  authDomain: "iron-companies.firebaseapp.com",
-  projectId: "iron-companies",
-  storageBucket: "iron-companies.firebasestorage.app",
-  messagingSenderId: "692492696732",
-  appId: "1:692492696732:web:cd29fc124ddc0fa014c159"
+
+apiKey:"YOUR_API",
+authDomain:"YOUR_DOMAIN",
+projectId:"YOUR_PROJECT",
+storageBucket:"YOUR_BUCKET",
+messagingSenderId:"YOUR_ID",
+appId:"YOUR_APP"
+
 };
+
 
 const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
 const db = getFirestore(app);
+const auth = getAuth(app);
 
-let currentUser;
-let userData;
 
-/* AUTH CHECK */
-onAuthStateChanged(auth, async (user)=>{
-  if(!user){
-    window.location.href="index.html";
-    return;
-  }
+const chatBox = document.getElementById("chatBox");
 
-  currentUser=user;
-  const snap=await getDoc(doc(db,"users",user.uid));
 
-  if(!snap.exists()){
-    showScreen("profileScreen");
-  } else {
-    userData=snap.data();
-    showScreen("portalScreen");
-  }
+window.sendMessage = async function(){
+
+const text = document.getElementById("messageInput").value;
+const file = document.getElementById("imageInput").files[0];
+
+let imageURL = "";
+
+if(file){
+
+const reader = new FileReader();
+
+reader.onload = async function(){
+
+imageURL = reader.result;
+
+await addDoc(collection(db,"messages"),{
+text:text,
+image:imageURL,
+uid:auth.currentUser.uid,
+time:Date.now()
 });
 
-function showScreen(id){
-  document.getElementById("profileScreen").style.display="none";
-  document.getElementById("portalScreen").style.display="none";
-  document.getElementById("chatApp").style.display="none";
-  document.getElementById(id).style.display =
-    id==="chatApp"?"flex":"block";
+};
+
+reader.readAsDataURL(file);
+
+}else{
+
+await addDoc(collection(db,"messages"),{
+text:text,
+image:"",
+uid:auth.currentUser.uid,
+time:Date.now()
+});
+
 }
 
-/* SAVE PROFILE */
-window.saveProfile=async()=>{
-  const name=document.getElementById("profileName").value.trim();
-  const occupation=document.getElementById("profileOccupation").value.trim();
-  if(!name) return alert("Enter name");
+document.getElementById("messageInput").value="";
 
-  await setDoc(doc(db,"users",currentUser.uid),{
-    username:name,
-    occupation:occupation||"",
-    createdAt:new Date()
-  });
-
-  location.reload();
 };
 
-/* ENTER CHAT */
-document.getElementById("enterChatBtn").onclick=()=>{
-  showScreen("chatApp");
-  document.getElementById("welcome").innerText =
-    userData.username+" • "+(userData.occupation||"");
-  loadMessages();
-};
 
-/* LOAD MESSAGES */
-function loadMessages(){
-  const q=query(collection(db,"messages"),orderBy("createdAt","asc"));
-  onSnapshot(q,(snap)=>{
-    const div=document.getElementById("messages");
-    div.innerHTML="";
-    snap.forEach(docSnap=>{
-      const m=docSnap.data();
-      div.innerHTML+=`
-        <div class="message">
-          <div class="username">${m.username}</div>
-          ${m.text?`<div>${m.text}</div>`:""}
-          ${m.image?`<img src="${m.image}" class="chat-img">`:""}
-          ${m.uid?`
-            <button class="view-btn"
-              onclick="viewProfile('${m.uid}')">
-              View Profile
-            </button>
-          `:""}
-        </div>
-      `;
-    });
-  });
+onSnapshot(collection(db,"messages"),(snapshot)=>{
+
+chatBox.innerHTML="";
+
+snapshot.forEach(doc=>{
+
+const data = doc.data();
+
+const div = document.createElement("div");
+
+div.classList.add("message");
+
+if(auth.currentUser && data.uid===auth.currentUser.uid){
+div.classList.add("me");
+}else{
+div.classList.add("other");
 }
 
-/* IMAGE COMPRESSION */
-function compressImage(file){
-  return new Promise(resolve=>{
-    const reader=new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload=e=>{
-      const img=new Image();
-      img.src=e.target.result;
-      img.onload=()=>{
-        const canvas=document.createElement("canvas");
-        const maxWidth=800;
-        const scale=maxWidth/img.width;
-        canvas.width=maxWidth;
-        canvas.height=img.height*scale;
-        const ctx=canvas.getContext("2d");
-        ctx.drawImage(img,0,0,canvas.width,canvas.height);
-        resolve(canvas.toDataURL("image/jpeg",0.6));
-      };
-    };
-  });
+div.innerHTML = `
+<div>${data.text || ""}</div>
+${data.image ? `<img src="${data.image}" style="max-width:200px;border-radius:10px;">` : ""}
+`;
+
+chatBox.appendChild(div);
+
+});
+
+chatBox.scrollTop = chatBox.scrollHeight;
+
+});
+
+
+window.openChat=function(){
+document.getElementById("chatBox").scrollIntoView();
 }
 
-/* SEND MESSAGE */
-window.sendMessage=async()=>{
-  const text=document.getElementById("messageInput").value.trim();
-  const imageFile=document.getElementById("imageInput").files[0];
-  if(!text && !imageFile) return;
-
-  let imageData=null;
-  if(imageFile){
-    imageData=await compressImage(imageFile);
-  }
-
-  await addDoc(collection(db,"messages"),{
-    username:userData.username,
-    uid:currentUser.uid,
-    text:text||null,
-    image:imageData||null,
-    createdAt:serverTimestamp()
-  });
-
-  document.getElementById("messageInput").value="";
-  document.getElementById("imageInput").value="";
-};
-
-/* VIEW PROFILE */
-window.viewProfile=(uid)=>{
-  window.location.href="profile.html?uid="+uid;
-};
-
-window.logout=async()=>{
-  await signOut(auth);
-  window.location.href="index.html";
-};
 </script>
 
 </body>
