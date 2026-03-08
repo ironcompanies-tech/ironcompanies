@@ -79,7 +79,15 @@ header{
   padding:10px;
   display:flex;
   justify-content:space-between;
+  align-items:center;
   background:#0f172a;
+}
+
+#profileButton{
+  width:36px;
+  height:36px;
+  border-radius:50%;
+  cursor:pointer;
 }
 
 #messages{
@@ -89,10 +97,20 @@ header{
 }
 
 .message{
-  background:var(--card);
   padding:10px;
-  border-radius:10px;
+  border-radius:12px;
   margin-bottom:10px;
+  max-width:70%;
+}
+
+.left{
+  background:var(--card);
+  align-self:flex-start;
+}
+
+.right{
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  align-self:flex-end;
 }
 
 .username{
@@ -133,198 +151,283 @@ header{
   font-size:22px;
   cursor:pointer;
 }
+
+footer{
+  text-align:center;
+  padding:8px;
+  font-size:12px;
+}
+
+footer a{
+  color:#38bdf8;
+  margin:0 10px;
+  text-decoration:none;
+}
 </style>
 </head>
 <body>
 
 <!-- PROFILE CREATION -->
 <div id="profileScreen" class="screen">
-  <h2>Create Profile</h2>
-  <input type="text" id="profileName" placeholder="Your Name">
-  <input type="text" id="profileOccupation" placeholder="Occupation">
-  <button onclick="saveProfile()">Save</button>
+<h2>Create Profile</h2>
+<input type="text" id="profileName" placeholder="Your Name">
+<input type="text" id="profileOccupation" placeholder="Occupation">
+<button onclick="saveProfile()">Save</button>
 </div>
 
 <!-- PORTAL -->
 <div id="portalScreen" class="screen">
-  <h2>Welcome</h2>
-  <br>
-  <div class="portal-buttons">
-    <button class="portal-btn" id="enterChatBtn">Join Chat</button>
-    <button class="portal-btn" onclick="window.location.href='articles.html'">
-      Articles
-    </button>
-  </div>
+<h2>Welcome</h2>
+<br>
+<div class="portal-buttons">
+
+<button class="portal-btn" id="enterChatBtn">
+Join Chat
+</button>
+
+<button class="portal-btn"
+onclick="window.location.href='articles.html'">
+Articles
+</button>
+
+</div>
 </div>
 
 <!-- CHAT -->
 <div id="chatApp">
-  <header>
-    <div id="welcome"></div>
-    <button onclick="logout()">Logout</button>
-  </header>
 
-  <div id="messages"></div>
+<header>
 
-  <div id="inputArea">
-    <input type="text" id="messageInput" placeholder="Type message...">
-    <label id="imageLabel" for="imageInput">📷</label>
-    <input type="file" id="imageInput" accept="image/*">
-    <button onclick="sendMessage()">Send</button>
-  </div>
+<img id="profileButton"
+src="https://cdn-icons-png.flaticon.com/512/149/149071.png"
+onclick="window.location.href='profile.html'">
+
+<div id="welcome"></div>
+
+<button onclick="logout()">Logout</button>
+
+</header>
+
+<div id="messages"></div>
+
+<div id="inputArea">
+
+<input type="text" id="messageInput" placeholder="Type message...">
+
+<label id="imageLabel" for="imageInput">📷</label>
+<input type="file" id="imageInput" accept="image/*">
+
+<button onclick="sendMessage()">Send</button>
+
+</div>
+
+<footer>
+<a href="privacy.html">Privacy Policy</a>
+<a href="terms.html">Terms</a>
+</footer>
+
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut }
 from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
 import {
-  getFirestore, collection, addDoc,
-  doc, getDoc, setDoc,
-  query, orderBy, onSnapshot,
-  serverTimestamp
+getFirestore, collection, addDoc,
+doc, getDoc, setDoc,
+query, orderBy, onSnapshot,
+serverTimestamp
 }
 from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyD6c1k8BURliiSAwEOnT_HW1MaZjNhHJSM",
-  authDomain: "iron-companies.firebaseapp.com",
-  projectId: "iron-companies",
-  storageBucket: "iron-companies.firebasestorage.app",
-  messagingSenderId: "692492696732",
-  appId: "1:692492696732:web:cd29fc124ddc0fa014c159"
+const firebaseConfig={
+apiKey:"AIzaSyD6c1k8BURliiSAwEOnT_HW1MaZjNhHJSM",
+authDomain:"iron-companies.firebaseapp.com",
+projectId:"iron-companies",
+storageBucket:"iron-companies.firebasestorage.app",
+messagingSenderId:"692492696732",
+appId:"1:692492696732:web:cd29fc124ddc0fa014c159"
 };
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
+const app=initializeApp(firebaseConfig);
+const auth=getAuth(app);
+const db=getFirestore(app);
 
 let currentUser;
 let userData;
 
-onAuthStateChanged(auth, async (user)=>{
-  if(!user){
-    window.location.href="index.html";
-    return;
-  }
+onAuthStateChanged(auth,async(user)=>{
 
-  currentUser=user;
-  const snap=await getDoc(doc(db,"users",user.uid));
+if(!user){
+window.location.href="index.html";
+return;
+}
 
-  if(!snap.exists()){
-    showScreen("profileScreen");
-  } else {
-    userData=snap.data();
-    showScreen("portalScreen");
-  }
+currentUser=user;
+
+const snap=await getDoc(doc(db,"users",user.uid));
+
+if(!snap.exists()){
+showScreen("profileScreen");
+}else{
+userData=snap.data();
+showScreen("portalScreen");
+}
+
 });
 
 function showScreen(id){
-  document.getElementById("profileScreen").style.display="none";
-  document.getElementById("portalScreen").style.display="none";
-  document.getElementById("chatApp").style.display="none";
-  document.getElementById(id).style.display =
-    id==="chatApp"?"flex":"block";
+document.getElementById("profileScreen").style.display="none";
+document.getElementById("portalScreen").style.display="none";
+document.getElementById("chatApp").style.display="none";
+
+document.getElementById(id).style.display=
+id==="chatApp"?"flex":"block";
 }
 
 window.saveProfile=async()=>{
-  const name=document.getElementById("profileName").value.trim();
-  const occupation=document.getElementById("profileOccupation").value.trim();
-  if(!name) return alert("Enter name");
 
-  await setDoc(doc(db,"users",currentUser.uid),{
-    username:name,
-    occupation:occupation||"",
-    profilePic:null,
-    createdAt:new Date()
-  });
+const name=document.getElementById("profileName").value.trim();
+const occupation=document.getElementById("profileOccupation").value.trim();
 
-  location.reload();
+if(!name) return alert("Enter name");
+
+await setDoc(doc(db,"users",currentUser.uid),{
+username:name,
+occupation:occupation||"",
+profilePic:null,
+createdAt:new Date()
+});
+
+location.reload();
 };
 
 document.getElementById("enterChatBtn").onclick=()=>{
-  showScreen("chatApp");
-  document.getElementById("welcome").innerText =
-    userData.username+" • "+(userData.occupation||"");
-  loadMessages();
+showScreen("chatApp");
+
+document.getElementById("welcome").innerText=
+userData.username+" • "+(userData.occupation||"");
+
+loadMessages();
 };
 
 function loadMessages(){
-  const q=query(collection(db,"messages"),orderBy("createdAt","asc"));
-  onSnapshot(q,(snap)=>{
-    const div=document.getElementById("messages");
-    div.innerHTML="";
-    snap.forEach(docSnap=>{
-      const m=docSnap.data();
-      div.innerHTML+=`
-        <div class="message">
-          <div class="username">${m.username}</div>
-          ${m.text?`<div>${m.text}</div>`:""}
-          ${m.image?`<img src="${m.image}" class="chat-img">`:""}
-          ${m.profilePic?`
-            <img src="${m.profilePic}" 
-                 class="profile-thumb"
-                 onclick="viewProfile('${m.uid}')">
-          `:""}
-        </div>
-      `;
-    });
-  });
+
+const q=query(collection(db,"messages"),orderBy("createdAt","asc"));
+
+onSnapshot(q,(snap)=>{
+
+const div=document.getElementById("messages");
+div.innerHTML="";
+
+snap.forEach(docSnap=>{
+
+const m=docSnap.data();
+
+const side = m.uid===currentUser.uid ? "right":"left";
+
+div.innerHTML+=`
+
+<div class="message ${side}">
+
+<div class="username">${m.username}</div>
+
+${m.text?`<div>${m.text}</div>`:""}
+
+${m.image?`<img src="${m.image}" class="chat-img">`:""}
+
+${m.profilePic?`
+<img src="${m.profilePic}"
+class="profile-thumb"
+onclick="viewProfile('${m.uid}')">
+`:""}
+
+</div>
+`;
+
+});
+
+div.scrollTop=div.scrollHeight;
+
+});
+
 }
 
 function compressImage(file){
-  return new Promise(resolve=>{
-    const reader=new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload=e=>{
-      const img=new Image();
-      img.src=e.target.result;
-      img.onload=()=>{
-        const canvas=document.createElement("canvas");
-        const maxWidth=800;
-        const scale=maxWidth/img.width;
-        canvas.width=maxWidth;
-        canvas.height=img.height*scale;
-        const ctx=canvas.getContext("2d");
-        ctx.drawImage(img,0,0,canvas.width,canvas.height);
-        resolve(canvas.toDataURL("image/jpeg",0.6));
-      };
-    };
-  });
+
+return new Promise(resolve=>{
+
+const reader=new FileReader();
+
+reader.readAsDataURL(file);
+
+reader.onload=e=>{
+
+const img=new Image();
+img.src=e.target.result;
+
+img.onload=()=>{
+
+const canvas=document.createElement("canvas");
+
+const maxWidth=800;
+const scale=maxWidth/img.width;
+
+canvas.width=maxWidth;
+canvas.height=img.height*scale;
+
+const ctx=canvas.getContext("2d");
+
+ctx.drawImage(img,0,0,canvas.width,canvas.height);
+
+resolve(canvas.toDataURL("image/jpeg",0.6));
+
+};
+
+};
+
+});
+
 }
 
 window.sendMessage=async()=>{
-  const text=document.getElementById("messageInput").value.trim();
-  const imageFile=document.getElementById("imageInput").files[0];
-  if(!text && !imageFile) return;
 
-  let imageData=null;
-  if(imageFile){
-    imageData=await compressImage(imageFile);
-  }
+const text=document.getElementById("messageInput").value.trim();
+const imageFile=document.getElementById("imageInput").files[0];
 
-  await addDoc(collection(db,"messages"),{
-    username:userData.username,
-    uid:currentUser.uid,
-    profilePic:userData.profilePic || null,
-    text:text||null,
-    image:imageData||null,
-    createdAt:serverTimestamp()
-  });
+if(!text && !imageFile) return;
 
-  document.getElementById("messageInput").value="";
-  document.getElementById("imageInput").value="";
+let imageData=null;
+
+if(imageFile){
+imageData=await compressImage(imageFile);
+}
+
+await addDoc(collection(db,"messages"),{
+
+username:userData.username,
+uid:currentUser.uid,
+profilePic:userData.profilePic||null,
+text:text||null,
+image:imageData||null,
+createdAt:serverTimestamp()
+
+});
+
+document.getElementById("messageInput").value="";
+document.getElementById("imageInput").value="";
+
 };
 
 window.viewProfile=(uid)=>{
-  window.location.href="profile.html?uid="+uid;
+window.location.href="profile.html?uid="+uid;
 };
 
 window.logout=async()=>{
-  await signOut(auth);
-  window.location.href="index.html";
+await signOut(auth);
+window.location.href="index.html";
 };
 </script>
-
 </body>
 </html>
