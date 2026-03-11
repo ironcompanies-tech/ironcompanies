@@ -2,141 +2,245 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Articles - Iron Companies</title>
+<title>Articles</title>
+
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
 
 <style>
+
 body{
-  margin:0;
-  font-family:sans-serif;
-  background:#0f172a;
-  color:white;
-  padding:20px;
+margin:0;
+font-family:Arial;
+background:#eee;
 }
 
-h1{color:#38bdf8;}
+header{
+background:#111;
+color:white;
+padding:12px;
+display:flex;
+align-items:center;
+}
 
-input, textarea{
-  width:100%;
-  padding:10px;
-  margin:8px 0;
-  border:none;
-  border-radius:8px;
+header button{
+margin-left:10px;
+}
+
+.container{
+padding:20px;
 }
 
 textarea{
-  height:150px;
+width:100%;
+height:100px;
+padding:10px;
 }
 
-button{
-  padding:10px 15px;
-  border:none;
-  border-radius:8px;
-  background:#2563eb;
-  color:white;
-  cursor:pointer;
+#search{
+width:100%;
+padding:10px;
+margin:15px 0;
 }
 
-.articleCard{
-  background:#1e293b;
-  padding:15px;
-  margin-top:20px;
-  border-radius:12px;
+.article{
+background:white;
+padding:15px;
+margin:15px 0;
+border-radius:8px;
+box-shadow:0 0 5px rgba(0,0,0,0.1);
 }
+
+.article img{
+max-width:100%;
+margin-top:10px;
+border-radius:6px;
+}
+
 .meta{
-  font-size:0.8rem;
-  color:#94a3b8;
+font-size:12px;
+color:gray;
+margin-top:8px;
 }
+
+.deleteBtn{
+background:red;
+color:white;
+border:none;
+padding:6px 10px;
+margin-top:10px;
+cursor:pointer;
+}
+
 </style>
 </head>
+
 <body>
 
-<h1>Articles</h1>
+<header>
 
-<h3>Publish Article</h3>
-<input type="text" id="title" placeholder="Title">
-<textarea id="content" placeholder="Write article..."></textarea>
-<button onclick="publish()">Publish</button>
+<h2>Articles</h2>
 
-<hr style="margin:40px 0;">
+<button onclick="location='employee.html'">Back</button>
 
-<h3>All Articles</h3>
-<div id="articles"></div>
+</header>
 
-<br>
-<button onclick="window.location.href='employee.html'">Back to Chat</button>
+<div class="container">
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getAuth, onAuthStateChanged }
-from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import {
-  getFirestore, collection, addDoc,
-  query, orderBy, onSnapshot, serverTimestamp
-}
-from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+<h3>Create Article</h3>
 
-const firebaseConfig = {
-  apiKey: "AIzaSyD6c1k8BURliiSAwEOnT_HW1MaZjNhHJSM",
-  authDomain: "iron-companies.firebaseapp.com",
-  projectId: "iron-companies",
-  storageBucket: "iron-companies.firebasestorage.app",
-  messagingSenderId: "692492696732",
-  appId: "1:692492696732:web:cd29fc124ddc0fa014c159"
+<textarea id="articleText" placeholder="Write article..."></textarea>
+
+<br><br>
+
+<input type="file" id="articleImage">
+
+<br><br>
+
+<button onclick="postArticle()">Post Article</button>
+
+<hr>
+
+<input id="search" placeholder="Search articles...">
+
+<div id="results"></div>
+
+</div>
+
+
+<script>
+
+const firebaseConfig={
+apiKey:"AIzaSyD6c1k8BURliiSAwEOnT_HW1MaZjNhHJSM",
+authDomain:"iron-companies.firebaseapp.com",
+projectId:"iron-companies",
+storageBucket:"iron-companies.firebasestorage.app",
+messagingSenderId:"692492696732",
+appId:"1:692492696732:web:cd29fc124ddc0fa014c159"
 };
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
+firebase.initializeApp(firebaseConfig);
+
+const db=firebase.firestore();
+const storage=firebase.storage();
+
+firebase.auth().signInAnonymously();
 
 let currentUser;
+let userData;
 
-onAuthStateChanged(auth,(user)=>{
-  if(!user){
-    window.location.href="index.html";
-  } else {
-    currentUser=user;
-    loadArticles();
-  }
+firebase.auth().onAuthStateChanged(async user=>{
+
+currentUser=user;
+
+const snap=await db.collection("users").doc(user.uid).get();
+
+userData=snap.data();
+
 });
 
-window.publish = async ()=>{
-  const title=document.getElementById("title").value.trim();
-  const content=document.getElementById("content").value.trim();
 
-  if(!title || !content){
-    alert("Fill all fields");
-    return;
-  }
 
-  await addDoc(collection(db,"articles"),{
-    title,
-    content,
-    author:currentUser.email,
-    createdAt:serverTimestamp()
-  });
+async function postArticle(){
 
-  document.getElementById("title").value="";
-  document.getElementById("content").value="";
-};
+const text=document.getElementById("articleText").value.trim();
 
-function loadArticles(){
-  const q=query(collection(db,"articles"),orderBy("createdAt","desc"));
-  onSnapshot(q,(snap)=>{
-    const container=document.getElementById("articles");
-    container.innerHTML="";
-    snap.forEach(doc=>{
-      const a=doc.data();
-      container.innerHTML+=`
-        <div class="articleCard">
-          <h3>${a.title}</h3>
-          <div class="meta">By ${a.author}</div>
-          <p>${a.content}</p>
-        </div>
-      `;
-    });
-  });
+const file=document.getElementById("articleImage").files[0];
+
+if(!text && !file) return;
+
+let imageURL=null;
+
+if(file){
+
+const ref=storage.ref("articleImages/"+Date.now());
+
+await ref.put(file);
+
+imageURL=await ref.getDownloadURL();
+
 }
+
+await db.collection("articles").add({
+
+text:text,
+image:imageURL,
+author:userData.username,
+uid:currentUser.uid,
+time:Date.now()
+
+});
+
+document.getElementById("articleText").value="";
+document.getElementById("articleImage").value="";
+
+alert("Article posted");
+
+}
+
+
+
+document.getElementById("search").addEventListener("input",async function(){
+
+const queryText=this.value.toLowerCase();
+
+const resultsDiv=document.getElementById("results");
+
+resultsDiv.innerHTML="";
+
+if(queryText.length<1) return;
+
+const snapshot=await db.collection("articles").get();
+
+snapshot.forEach(doc=>{
+
+const a=doc.data();
+
+if(a.text && a.text.toLowerCase().includes(queryText)){
+
+const div=document.createElement("div");
+
+div.className="article";
+
+div.innerHTML=`
+<b>${a.author}</b>
+
+<p>${a.text}</p>
+
+${a.image ? `<img src="${a.image}">` : ""}
+
+<div class="meta">
+${new Date(a.time).toLocaleString()}
+</div>
+
+${a.uid===currentUser.uid ? `<button class="deleteBtn" onclick="deleteArticle('${doc.id}')">Delete</button>` : ""}
+
+`;
+
+resultsDiv.appendChild(div);
+
+}
+
+});
+
+});
+
+
+
+async function deleteArticle(id){
+
+if(!confirm("Delete this article?")) return;
+
+await db.collection("articles").doc(id).delete();
+
+alert("Article deleted");
+
+document.getElementById("search").dispatchEvent(new Event("input"));
+
+}
+
 </script>
 
 </body>
