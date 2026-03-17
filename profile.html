@@ -7,37 +7,56 @@
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
 
 <style>
-body{background:#0f172a;color:white;font-family:sans-serif;display:flex;justify-content:center;align-items:center;height:100vh;}
-.card{background:#1e293b;padding:20px;border-radius:10px;text-align:center;width:300px;}
-img{width:100px;height:100px;border-radius:50%;}
-input{width:100%;padding:8px;margin-top:8px;}
-button{margin-top:10px;padding:10px;width:100%;}
+body{
+font-family:sans-serif;
+background:#0f172a;
+color:white;
+padding:20px;
+}
+
+input{
+width:100%;
+padding:10px;
+margin:8px 0;
+border-radius:8px;
+border:none;
+}
+
+button{
+padding:10px;
+border:none;
+border-radius:8px;
+background:#2563eb;
+color:white;
+cursor:pointer;
+}
+
+img{
+width:100px;
+height:100px;
+border-radius:50%;
+margin-bottom:10px;
+}
 </style>
 </head>
 
 <body>
 
-<div class="card">
+<h2>My Profile</h2>
 
-<img id="pic">
+<img id="preview">
 
-<h2 id="name"></h2>
-<p id="job"></p>
+<input id="name" placeholder="Name">
+<input id="job" placeholder="Occupation">
 
-<input id="newName">
-<input id="newJob">
-<input type="file" id="newPic">
+<input type="file" id="imgInput" accept="image/*">
 
-<button onclick="update()">Update</button>
+<button onclick="save()">Update Profile</button>
 <button onclick="location='employee.html'">Back</button>
 
-</div>
-
 <script>
-
 const firebaseConfig={
 apiKey:"AIzaSyD6c1k8BURliiSAwEOnT_HW1MaZjNhHJSM",
 authDomain:"iron-companies.firebaseapp.com",
@@ -50,42 +69,68 @@ appId:"1:692492696732:web:cd29fc124ddc0fa014c159"
 firebase.initializeApp(firebaseConfig);
 
 const db=firebase.firestore();
-const storage=firebase.storage();
 const auth=firebase.auth();
 
-let uid;
+let user;
 
-auth.onAuthStateChanged(async user=>{
-uid=user.uid;
-const d=(await db.collection("users").doc(uid).get()).data();
-pic.src=d.profilePic||"";
-name.innerText=d.username;
-job.innerText=d.occupation;
+auth.onAuthStateChanged(async u=>{
+if(!u){ location="signup.html"; return; }
+
+user=u;
+
+const doc=await db.collection("users").doc(user.uid).get();
+
+if(doc.exists){
+const d=doc.data();
+name.value=d.username||"";
+job.value=d.occupation||"";
+preview.src=d.profilePic||"";
+}
 });
 
-async function update(){
-const nameVal=newName.value;
-const jobVal=newJob.value;
-const file=newPic.files[0];
+// compress image
+function compress(file){
+return new Promise(res=>{
+const r=new FileReader();
+r.readAsDataURL(file);
 
-let picUrl=null;
+r.onload=e=>{
+const img=new Image();
+img.src=e.target.result;
+
+img.onload=()=>{
+const c=document.createElement("canvas");
+const max=300;
+const scale=max/img.width;
+
+c.width=max;
+c.height=img.height*scale;
+
+const ctx=c.getContext("2d");
+ctx.drawImage(img,0,0,c.width,c.height);
+
+res(c.toDataURL("image/jpeg",0.6));
+};
+};
+});
+}
+
+async function save(){
+let imgData=null;
+const file=imgInput.files[0];
 
 if(file){
-const ref=storage.ref("profiles/"+uid);
-await ref.put(file);
-picUrl=await ref.getDownloadURL();
+imgData=await compress(file);
 }
 
-await db.collection("users").doc(uid).set({
-username:nameVal,
-occupation:jobVal,
-profilePic:picUrl
+await db.collection("users").doc(user.uid).set({
+username:name.value,
+occupation:job.value,
+profilePic:imgData || preview.src || ""
 },{merge:true});
 
-alert("Updated");
-location.reload();
+alert("Profile Updated");
 }
-
 </script>
 
 </body>
