@@ -7,17 +7,14 @@
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
 
 <style>
 :root{
 --bg1:#0f172a;
 --bg2:#1e293b;
 --accent:#2563eb;
---accent2:#38bdf8;
 --card:#1e293b;
 --text:#f1f5f9;
---muted:#94a3b8;
 }
 
 body{
@@ -54,12 +51,17 @@ max-width:70%;
 padding:10px;
 border-radius:10px;
 margin:5px 0;
+word-wrap:break-word;
 }
 
 .left{background:var(--card);align-self:flex-start;}
 .right{background:var(--accent);align-self:flex-end;}
 
-img.chatImg{max-width:100%;border-radius:10px;margin-top:5px;}
+img.chatImg{
+max-width:100%;
+border-radius:10px;
+margin-top:5px;
+}
 
 #inputArea{
 display:flex;
@@ -67,10 +69,20 @@ padding:10px;
 gap:5px;
 }
 
-#msgInput{flex:1;padding:10px;border-radius:8px;border:none;}
+#msgInput{
+flex:1;
+padding:10px;
+border-radius:8px;
+border:none;
+}
 
-button{border:none;padding:10px;border-radius:8px;background:var(--accent);color:white;}
-
+button{
+border:none;
+padding:10px;
+border-radius:8px;
+background:var(--accent);
+color:white;
+}
 </style>
 </head>
 
@@ -79,20 +91,18 @@ button{border:none;padding:10px;border-radius:8px;background:var(--accent);color
 <header>
 <div id="profileBtn"><img id="avatar"></div>
 <h3 style="margin-left:10px;">Chat</h3>
-<button onclick="location='articles.html'" style="margin-left:auto;">Articles</button>
 </header>
 
 <div id="chat"></div>
 
 <div id="inputArea">
-<input id="msgInput" placeholder="Type...">
-<input type="file" id="imgInput" hidden>
+<input id="msgInput" placeholder="Type message...">
+<input type="file" id="imgInput" hidden accept="image/*">
 <button onclick="imgInput.click()">📷</button>
 <button onclick="send()">Send</button>
 </div>
 
 <script>
-
 const firebaseConfig={
 apiKey:"AIzaSyD6c1k8BURliiSAwEOnT_HW1MaZjNhHJSM",
 authDomain:"iron-companies.firebaseapp.com",
@@ -105,7 +115,6 @@ appId:"1:692492696732:web:cd29fc124ddc0fa014c159"
 firebase.initializeApp(firebaseConfig);
 
 const db=firebase.firestore();
-const storage=firebase.storage();
 const auth=firebase.auth();
 
 let currentUser, userData;
@@ -119,54 +128,91 @@ return;
 if(!user.emailVerified){
 alert("Verify your email first.");
 auth.signOut();
-location="signup.html";
 return;
 }
 
 currentUser=user;
 
-const snap=await db.collection("users").doc(user.uid).get();
+const doc=await db.collection("users").doc(user.uid).get();
 
-if(snap.exists){
-userData=snap.data();
-avatar.src=userData.profilePic||"";
+if(!doc.exists){
+await db.collection("users").doc(user.uid).set({
+username:"User",
+profilePic:"",
+occupation:""
+});
 }
+
+userData=(await db.collection("users").doc(user.uid).get()).data();
+avatar.src=userData.profilePic||"";
 
 loadMessages();
 });
 
 function loadMessages(){
-db.collection("messages").orderBy("createdAt")
+db.collection("messages")
+.orderBy("createdAt","asc")
 .onSnapshot(snap=>{
 chat.innerHTML="";
+
 snap.forEach(d=>{
 const m=d.data();
+
 const div=document.createElement("div");
 div.className="msg "+(m.uid===currentUser.uid?"right":"left");
 
 div.innerHTML=`
 <b>${m.username}</b><br>
 ${m.text||""}
-${m.image?`<img class="chatImg" src="${m.image}">`:""}
+${m.image?`<img src="${m.image}" class="chatImg">`:""}
 `;
 
 chat.appendChild(div);
 });
+
 chat.scrollTop=chat.scrollHeight;
 });
 }
 
+// 🔥 IMAGE COMPRESSION (key part)
+function compressImage(file){
+return new Promise(resolve=>{
+const reader=new FileReader();
+reader.readAsDataURL(file);
+
+reader.onload=e=>{
+const img=new Image();
+img.src=e.target.result;
+
+img.onload=()=>{
+const canvas=document.createElement("canvas");
+
+const MAX_WIDTH=400; // smaller = faster + firestore safe
+const scale=MAX_WIDTH/img.width;
+
+canvas.width=MAX_WIDTH;
+canvas.height=img.height*scale;
+
+const ctx=canvas.getContext("2d");
+ctx.drawImage(img,0,0,canvas.width,canvas.height);
+
+// quality 0.6 = strong compression
+resolve(canvas.toDataURL("image/jpeg",0.6));
+};
+};
+});
+}
+
 async function send(){
-const text=msgInput.value;
+const text=msgInput.value.trim();
 const file=imgInput.files[0];
+
 if(!text && !file) return;
 
-let img=null;
+let imageData=null;
 
 if(file){
-const ref=storage.ref("chat/"+Date.now());
-await ref.put(file);
-img=await ref.getDownloadURL();
+imageData=await compressImage(file);
 }
 
 await db.collection("messages").add({
@@ -174,8 +220,8 @@ username:userData.username,
 uid:currentUser.uid,
 profilePic:userData.profilePic||"",
 text:text||null,
-image:img,
-createdAt:Date.now()
+image:imageData||null,
+createdAt:firebase.firestore.FieldValue.serverTimestamp()
 });
 
 msgInput.value="";
@@ -183,7 +229,6 @@ imgInput.value="";
 }
 
 profileBtn.onclick=()=>location="profile.html";
-
 </script>
 
 </body>
