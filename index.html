@@ -1,185 +1,60 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Signup</title>
 
-<title>Iron Companies Login</title>
-
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 
 <style>
-
-body{
-margin:0;
-height:100vh;
-display:flex;
-justify-content:center;
-align-items:center;
-font-family:'Orbitron',sans-serif;
-background:radial-gradient(circle at top,#0f1c4d,#020617 70%);
-color:#00eaff;
-}
-
-.container{
-background:#0b1330;
-padding:40px;
-border-radius:16px;
-box-shadow:0 0 30px #00eaff33;
-width:320px;
-text-align:center;
-}
-
-h1{
-margin-bottom:25px;
-font-size:22px;
-color:#00eaff;
-}
-
-input{
-width:100%;
-padding:12px;
-margin-bottom:15px;
-border-radius:10px;
-border:1px solid #00eaff55;
-background:#020617;
-color:#00eaff;
-font-family:'Orbitron',sans-serif;
-}
-
-button{
-width:100%;
-padding:12px;
-border:none;
-border-radius:10px;
-background:linear-gradient(90deg,#00eaff,#00bcd4);
-color:black;
-font-weight:bold;
-cursor:pointer;
-margin-top:5px;
-}
-
-button:hover{
-transform:scale(1.03);
-}
-
-.switch{
-margin-top:10px;
-font-size:12px;
-color:#9befff;
-cursor:pointer;
-}
-
-#error{
-margin-top:10px;
-color:#ff6b6b;
-font-size:12px;
-}
-
+body{display:flex;justify-content:center;align-items:center;height:100vh;background:#0f172a;color:white;}
+.box{background:#1e293b;padding:20px;border-radius:10px;width:300px;text-align:center;}
+input{width:100%;padding:10px;margin-top:10px;}
+button{margin-top:10px;padding:10px;width:100%;}
 </style>
 </head>
 
-
 <body>
 
-<div class="container">
+<div class="box">
 
-<h1>Iron Companies</h1>
+<h2>Signup</h2>
 
 <input id="email" placeholder="Email">
-<input id="password" type="password" placeholder="Password">
+<input id="pass" type="password" placeholder="Password">
 
-<button onclick="login()">Login</button>
-<button onclick="register()">Create Account</button>
-
-<div id="error"></div>
+<button onclick="signup()">Create Account</button>
 
 </div>
 
+<script>
 
-<script type="module">
-
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { 
-getAuth,
-signInWithEmailAndPassword,
-createUserWithEmailAndPassword,
-onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-
-import {
-getFirestore,
-doc,
-setDoc
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
-
-
-const firebaseConfig = {
-apiKey: "AIzaSyD6c1k8BURliiSAwEOnT_HW1MaZjNhHJSM",
-authDomain: "iron-companies.firebaseapp.com",
-projectId: "iron-companies",
-storageBucket: "iron-companies.firebasestorage.app",
-messagingSenderId: "692492696732",
-appId: "1:692492696732:web:cd29fc124ddc0fa014c159"
+const firebaseConfig={
+apiKey:"AIzaSyD6c1k8BURliiSAwEOnT_HW1MaZjNhHJSM",
+authDomain:"iron-companies.firebaseapp.com",
+projectId:"iron-companies",
+storageBucket:"iron-companies.firebasestorage.app",
+messagingSenderId:"692492696732",
+appId:"1:692492696732:web:cd29fc124ddc0fa014c159"
 };
 
+firebase.initializeApp(firebaseConfig);
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
+const auth=firebase.auth();
 
+async function signup(){
 
-onAuthStateChanged(auth,(user)=>{
-if(user){
-window.location.href="employee.html";
-}
-});
+const emailVal=email.value;
+const passVal=pass.value;
 
+const userCred=await auth.createUserWithEmailAndPassword(emailVal,passVal);
 
+await userCred.user.sendEmailVerification();
 
-window.login = async ()=>{
+alert("Verification email sent. Check inbox.");
 
-const email=document.getElementById("email").value;
-const password=document.getElementById("password").value;
-
-try{
-
-await signInWithEmailAndPassword(auth,email,password);
-window.location.href="employee.html";
-
-}catch(err){
-
-document.getElementById("error").innerText=err.message;
-
-}
-
-}
-
-
-
-window.register = async ()=>{
-
-const email=document.getElementById("email").value;
-const password=document.getElementById("password").value;
-
-try{
-
-const userCredential = await createUserWithEmailAndPassword(auth,email,password);
-
-await setDoc(doc(db,"users",userCredential.user.uid),{
-username: email.split("@")[0],
-email: email,
-createdAt: new Date()
-});
-
-window.location.href="employee.html";
-
-}catch(err){
-
-document.getElementById("error").innerText=err.message;
-
-}
+auth.signOut();
 
 }
 
