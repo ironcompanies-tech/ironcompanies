@@ -10,43 +10,11 @@
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
 
 <style>
-
-body{
-font-family:Arial;
-display:flex;
-justify-content:center;
-align-items:center;
-height:100vh;
-background:#f2f2f2;
-}
-
-.card{
-background:white;
-padding:30px;
-border-radius:10px;
-width:320px;
-text-align:center;
-}
-
-img{
-width:120px;
-height:120px;
-border-radius:50%;
-object-fit:cover;
-}
-
-input{
-width:100%;
-padding:10px;
-margin-top:8px;
-}
-
-button{
-margin-top:10px;
-padding:10px;
-width:100%;
-}
-
+body{background:#0f172a;color:white;font-family:sans-serif;display:flex;justify-content:center;align-items:center;height:100vh;}
+.card{background:#1e293b;padding:20px;border-radius:10px;text-align:center;width:300px;}
+img{width:100px;height:100px;border-radius:50%;}
+input{width:100%;padding:8px;margin-top:8px;}
+button{margin-top:10px;padding:10px;width:100%;}
 </style>
 </head>
 
@@ -54,20 +22,16 @@ width:100%;
 
 <div class="card">
 
-<img id="photo">
+<img id="pic">
 
 <h2 id="name"></h2>
-
 <p id="job"></p>
 
-<input id="newName" placeholder="Update name">
+<input id="newName">
+<input id="newJob">
+<input type="file" id="newPic">
 
-<input id="newJob" placeholder="Update occupation">
-
-<input type="file" id="newPhoto">
-
-<button onclick="updateProfile()">Save</button>
-
+<button onclick="update()">Update</button>
 <button onclick="location='employee.html'">Back</button>
 
 </div>
@@ -87,57 +51,39 @@ firebase.initializeApp(firebaseConfig);
 
 const db=firebase.firestore();
 const storage=firebase.storage();
-
-firebase.auth().signInAnonymously();
+const auth=firebase.auth();
 
 let uid;
 
-firebase.auth().onAuthStateChanged(async user=>{
-
-uid=new URLSearchParams(location.search).get("uid")||user.uid;
-
-const snap=await db.collection("users").doc(uid).get();
-
-const data=snap.data();
-
-document.getElementById("photo").src=data.photo||"";
-document.getElementById("name").innerText=data.username;
-document.getElementById("job").innerText=data.occupation;
-
+auth.onAuthStateChanged(async user=>{
+uid=user.uid;
+const d=(await db.collection("users").doc(uid).get()).data();
+pic.src=d.profilePic||"";
+name.innerText=d.username;
+job.innerText=d.occupation;
 });
 
-async function updateProfile(){
+async function update(){
+const nameVal=newName.value;
+const jobVal=newJob.value;
+const file=newPic.files[0];
 
-const user=firebase.auth().currentUser;
-
-if(user.uid!==uid) return;
-
-const name=document.getElementById("newName").value;
-const job=document.getElementById("newJob").value;
-const file=document.getElementById("newPhoto").files[0];
-
-let photoURL=null;
+let picUrl=null;
 
 if(file){
-
-const ref=storage.ref("profileImages/"+uid);
-
+const ref=storage.ref("profiles/"+uid);
 await ref.put(file);
-
-photoURL=await ref.getDownloadURL();
-
+picUrl=await ref.getDownloadURL();
 }
 
 await db.collection("users").doc(uid).set({
-username:name,
-occupation:job,
-photo:photoURL
+username:nameVal,
+occupation:jobVal,
+profilePic:picUrl
 },{merge:true});
 
 alert("Updated");
-
 location.reload();
-
 }
 
 </script>
