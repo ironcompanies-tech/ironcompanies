@@ -10,105 +10,31 @@
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
 
 <style>
-
-body{
-margin:0;
-font-family:Arial;
-background:#eee;
-}
-
-header{
-background:#111;
-color:white;
-padding:12px;
-display:flex;
-align-items:center;
-}
-
-header button{
-margin-left:10px;
-}
-
-.container{
-padding:20px;
-}
-
-textarea{
-width:100%;
-height:100px;
-padding:10px;
-}
-
-#search{
-width:100%;
-padding:10px;
-margin:15px 0;
-}
-
-.article{
-background:white;
-padding:15px;
-margin:15px 0;
-border-radius:8px;
-box-shadow:0 0 5px rgba(0,0,0,0.1);
-}
-
-.article img{
-max-width:100%;
-margin-top:10px;
-border-radius:6px;
-}
-
-.meta{
-font-size:12px;
-color:gray;
-margin-top:8px;
-}
-
-.deleteBtn{
-background:red;
-color:white;
-border:none;
-padding:6px 10px;
-margin-top:10px;
-cursor:pointer;
-}
-
+body{background:#0f172a;color:white;font-family:sans-serif;}
+.container{padding:20px;}
+textarea{width:100%;height:80px;}
+.article{background:#1e293b;padding:10px;margin:10px 0;border-radius:8px;}
+img{max-width:100%;}
 </style>
 </head>
 
 <body>
 
-<header>
-
-<h2>Articles</h2>
+<div class="container">
 
 <button onclick="location='employee.html'">Back</button>
 
-</header>
+<h2>Articles</h2>
 
-<div class="container">
+<textarea id="text"></textarea>
+<input type="file" id="img">
+<button onclick="post()">Post</button>
 
-<h3>Create Article</h3>
-
-<textarea id="articleText" placeholder="Write article..."></textarea>
-
-<br><br>
-
-<input type="file" id="articleImage">
-
-<br><br>
-
-<button onclick="postArticle()">Post Article</button>
-
-<hr>
-
-<input id="search" placeholder="Search articles...">
+<input id="search" placeholder="Search...">
 
 <div id="results"></div>
 
 </div>
-
 
 <script>
 
@@ -125,120 +51,63 @@ firebase.initializeApp(firebaseConfig);
 
 const db=firebase.firestore();
 const storage=firebase.storage();
+const auth=firebase.auth();
 
-firebase.auth().signInAnonymously();
+let user;
 
-let currentUser;
-let userData;
+auth.onAuthStateChanged(u=>user=u);
 
-firebase.auth().onAuthStateChanged(async user=>{
+async function post(){
+const t=text.value;
+const f=img.files[0];
 
-currentUser=user;
+let url=null;
 
-const snap=await db.collection("users").doc(user.uid).get();
-
-userData=snap.data();
-
-});
-
-
-
-async function postArticle(){
-
-const text=document.getElementById("articleText").value.trim();
-
-const file=document.getElementById("articleImage").files[0];
-
-if(!text && !file) return;
-
-let imageURL=null;
-
-if(file){
-
-const ref=storage.ref("articleImages/"+Date.now());
-
-await ref.put(file);
-
-imageURL=await ref.getDownloadURL();
-
+if(f){
+const ref=storage.ref("articles/"+Date.now());
+await ref.put(f);
+url=await ref.getDownloadURL();
 }
 
 await db.collection("articles").add({
-
-text:text,
-image:imageURL,
-author:userData.username,
-uid:currentUser.uid,
+text:t,
+image:url,
+uid:user.uid,
 time:Date.now()
-
 });
 
-document.getElementById("articleText").value="";
-document.getElementById("articleImage").value="";
-
-alert("Article posted");
-
+text.value="";
+img.value="";
 }
 
+search.oninput=async ()=>{
+results.innerHTML="";
+const q=search.value.toLowerCase();
+if(!q) return;
 
+const snap=await db.collection("articles").get();
 
-document.getElementById("search").addEventListener("input",async function(){
-
-const queryText=this.value.toLowerCase();
-
-const resultsDiv=document.getElementById("results");
-
-resultsDiv.innerHTML="";
-
-if(queryText.length<1) return;
-
-const snapshot=await db.collection("articles").get();
-
-snapshot.forEach(doc=>{
-
+snap.forEach(doc=>{
 const a=doc.data();
+if(a.text && a.text.toLowerCase().includes(q)){
 
-if(a.text && a.text.toLowerCase().includes(queryText)){
-
-const div=document.createElement("div");
-
-div.className="article";
-
-div.innerHTML=`
-<b>${a.author}</b>
-
-<p>${a.text}</p>
-
-${a.image ? `<img src="${a.image}">` : ""}
-
-<div class="meta">
-${new Date(a.time).toLocaleString()}
+results.innerHTML+=`
+<div class="article">
+${a.text}
+${a.image?`<br><img src="${a.image}">`:""}
+<br>
+<small>${new Date(a.time).toLocaleString()}</small>
+${a.uid===user.uid?`<br><button onclick="del('${doc.id}')">Delete</button>`:""}
 </div>
-
-${a.uid===currentUser.uid ? `<button class="deleteBtn" onclick="deleteArticle('${doc.id}')">Delete</button>` : ""}
-
 `;
 
-resultsDiv.appendChild(div);
-
 }
-
 });
+};
 
-});
-
-
-
-async function deleteArticle(id){
-
-if(!confirm("Delete this article?")) return;
-
+async function del(id){
 await db.collection("articles").doc(id).delete();
-
-alert("Article deleted");
-
-document.getElementById("search").dispatchEvent(new Event("input"));
-
+search.dispatchEvent(new Event("input"));
 }
 
 </script>
