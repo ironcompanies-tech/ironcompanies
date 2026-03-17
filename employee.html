@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Employee Chat</title>
+<title>Employee</title>
 
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
@@ -10,85 +10,66 @@
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
 
 <style>
+:root{
+--bg1:#0f172a;
+--bg2:#1e293b;
+--accent:#2563eb;
+--accent2:#38bdf8;
+--card:#1e293b;
+--text:#f1f5f9;
+--muted:#94a3b8;
+}
 
-body{margin:0;font-family:Arial;background:#e6e6e6;}
+body{
+margin:0;
+font-family:sans-serif;
+background:linear-gradient(135deg,var(--bg1),var(--bg2));
+color:var(--text);
+}
 
 header{
-background:#111;
-color:white;
 display:flex;
 align-items:center;
 padding:10px;
+background:#0f172a;
 }
 
 #profileBtn img{
-width:40px;
-height:40px;
+width:35px;
+height:35px;
 border-radius:50%;
-cursor:pointer;
-margin-right:10px;
-}
-
-#articlesBtn{
-margin-left:auto;
-margin-right:10px;
 cursor:pointer;
 }
 
 #chat{
-height:70vh;
+height:75vh;
 overflow-y:auto;
 padding:10px;
-}
-
-.message{
 display:flex;
-align-items:flex-end;
-margin:10px 0;
-max-width:80%;
+flex-direction:column;
 }
 
-.left{flex-direction:row;}
-.right{flex-direction:row-reverse;margin-left:auto;}
-
-.bubble{
+.msg{
+max-width:70%;
 padding:10px;
 border-radius:10px;
-background:white;
+margin:5px 0;
 }
 
-.right .bubble{
-background:#4CAF50;
-color:white;
-}
+.left{background:var(--card);align-self:flex-start;}
+.right{background:var(--accent);align-self:flex-end;}
 
-.avatar{
-width:35px;
-height:35px;
-border-radius:50%;
-margin:0 6px;
-cursor:pointer;
-}
-
-.time{
-font-size:10px;
-opacity:0.7;
-}
+img.chatImg{max-width:100%;border-radius:10px;margin-top:5px;}
 
 #inputArea{
-position:fixed;
-bottom:0;
-width:100%;
 display:flex;
-background:white;
 padding:10px;
+gap:5px;
 }
 
-#msg{flex:1;padding:10px;}
+#msgInput{flex:1;padding:10px;border-radius:8px;border:none;}
 
-#send{width:70px;}
-
-#imgInput{display:none;}
+button{border:none;padding:10px;border-radius:8px;background:var(--accent);color:white;}
 
 </style>
 </head>
@@ -96,29 +77,18 @@ padding:10px;
 <body>
 
 <header>
-
-<div id="profileBtn">
-<img id="myAvatar" src="">
-</div>
-
-<h3>Employee Chat</h3>
-
-<div id="articlesBtn">Articles</div>
-
+<div id="profileBtn"><img id="avatar"></div>
+<h3 style="margin-left:10px;">Chat</h3>
+<button onclick="location='articles.html'" style="margin-left:auto;">Articles</button>
 </header>
 
 <div id="chat"></div>
 
 <div id="inputArea">
-
-<input id="msg" placeholder="Type message">
-
-<button onclick="document.getElementById('imgInput').click()">📷</button>
-
-<button id="send">Send</button>
-
-<input type="file" id="imgInput">
-
+<input id="msgInput" placeholder="Type...">
+<input type="file" id="imgInput" hidden>
+<button onclick="imgInput.click()">📷</button>
+<button onclick="send()">Send</button>
 </div>
 
 <script>
@@ -136,115 +106,83 @@ firebase.initializeApp(firebaseConfig);
 
 const db=firebase.firestore();
 const storage=firebase.storage();
+const auth=firebase.auth();
 
-firebase.auth().signInAnonymously();
+let currentUser, userData;
 
-let currentUser;
-let myData;
+auth.onAuthStateChanged(async user=>{
+if(!user){
+location="signup.html";
+return;
+}
 
-firebase.auth().onAuthStateChanged(async user=>{
+if(!user.emailVerified){
+alert("Verify your email first.");
+auth.signOut();
+location="signup.html";
+return;
+}
 
 currentUser=user;
 
 const snap=await db.collection("users").doc(user.uid).get();
 
 if(snap.exists){
-myData=snap.data();
-document.getElementById("myAvatar").src=myData.photo||"";
+userData=snap.data();
+avatar.src=userData.profilePic||"";
 }
 
 loadMessages();
-
-});
-
-document.getElementById("send").onclick=async()=>{
-
-const text=document.getElementById("msg").value;
-
-if(!text) return;
-
-await db.collection("messages").add({
-text:text,
-uid:currentUser.uid,
-username:myData.username,
-photo:myData.photo||"",
-time:Date.now()
-});
-
-document.getElementById("msg").value="";
-
-};
-
-document.getElementById("imgInput").addEventListener("change",async e=>{
-
-const file=e.target.files[0];
-
-const ref=storage.ref("chatImages/"+Date.now());
-
-await ref.put(file);
-
-const url=await ref.getDownloadURL();
-
-await db.collection("messages").add({
-image:url,
-uid:currentUser.uid,
-username:myData.username,
-photo:myData.photo||"",
-time:Date.now()
-});
-
 });
 
 function loadMessages(){
-
-db.collection("messages").orderBy("time")
-.onSnapshot(snapshot=>{
-
-const chat=document.getElementById("chat");
-
+db.collection("messages").orderBy("createdAt")
+.onSnapshot(snap=>{
 chat.innerHTML="";
-
-snapshot.forEach(doc=>{
-
-const m=doc.data();
-
-const side=m.uid===currentUser.uid?"right":"left";
-
+snap.forEach(d=>{
+const m=d.data();
 const div=document.createElement("div");
-div.className="message "+side;
+div.className="msg "+(m.uid===currentUser.uid?"right":"left");
 
 div.innerHTML=`
-<img class="avatar" src="${m.photo}" onclick="viewProfile('${m.uid}')">
-
-<div class="bubble">
 <b>${m.username}</b><br>
-${m.text?m.text:""}
-${m.image?`<br><img src="${m.image}" width="150">`:""}
-<div class="time">${new Date(m.time).toLocaleTimeString()}</div>
-</div>
+${m.text||""}
+${m.image?`<img class="chatImg" src="${m.image}">`:""}
 `;
 
 chat.appendChild(div);
-
 });
-
 chat.scrollTop=chat.scrollHeight;
+});
+}
 
+async function send(){
+const text=msgInput.value;
+const file=imgInput.files[0];
+if(!text && !file) return;
+
+let img=null;
+
+if(file){
+const ref=storage.ref("chat/"+Date.now());
+await ref.put(file);
+img=await ref.getDownloadURL();
+}
+
+await db.collection("messages").add({
+username:userData.username,
+uid:currentUser.uid,
+profilePic:userData.profilePic||"",
+text:text||null,
+image:img,
+createdAt:Date.now()
 });
 
+msgInput.value="";
+imgInput.value="";
 }
 
-function viewProfile(uid){
-window.location="profile.html?uid="+uid;
-}
-
-document.getElementById("profileBtn").onclick=()=>{
-window.location="profile.html";
-}
-
-document.getElementById("articlesBtn").onclick=()=>{
-window.location="articles.html";
-}
+profileBtn.onclick=()=>location="profile.html";
 
 </script>
 
