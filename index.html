@@ -2,34 +2,67 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Signup</title>
+<title>Login</title>
 
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 
 <style>
-body{display:flex;justify-content:center;align-items:center;height:100vh;background:#0f172a;color:white;}
-.box{background:#1e293b;padding:20px;border-radius:10px;width:300px;text-align:center;}
-input{width:100%;padding:10px;margin-top:10px;}
-button{margin-top:10px;padding:10px;width:100%;}
+body{
+margin:0;
+font-family:sans-serif;
+background:#0f172a;
+color:white;
+display:flex;
+justify-content:center;
+align-items:center;
+height:100vh;
+}
+
+.box{
+background:#1e293b;
+padding:25px;
+border-radius:12px;
+width:300px;
+text-align:center;
+}
+
+input{
+width:100%;
+padding:10px;
+margin:8px 0;
+border:none;
+border-radius:8px;
+}
+
+button{
+width:100%;
+padding:10px;
+margin-top:10px;
+border:none;
+border-radius:8px;
+background:#2563eb;
+color:white;
+cursor:pointer;
+}
 </style>
 </head>
 
 <body>
 
 <div class="box">
-
-<h2>Signup</h2>
+<h2>Iron Companies</h2>
 
 <input id="email" placeholder="Email">
-<input id="pass" type="password" placeholder="Password">
+<input id="password" type="password" placeholder="Password">
 
-<button onclick="signup()">Create Account</button>
+<button onclick="login()">Login</button>
+<button onclick="signup()">Sign Up</button>
 
+<p id="msg"></p>
 </div>
 
 <script>
-
 const firebaseConfig={
 apiKey:"AIzaSyD6c1k8BURliiSAwEOnT_HW1MaZjNhHJSM",
 authDomain:"iron-companies.firebaseapp.com",
@@ -40,24 +73,49 @@ appId:"1:692492696732:web:cd29fc124ddc0fa014c159"
 };
 
 firebase.initializeApp(firebaseConfig);
-
 const auth=firebase.auth();
 
+function show(m){ msg.innerText=m; }
+
+// SIGN UP
 async function signup(){
+try{
+const user=await auth.createUserWithEmailAndPassword(
+email.value,password.value
+);
 
-const emailVal=email.value;
-const passVal=pass.value;
+// send verification
+await user.user.sendEmailVerification();
 
-const userCred=await auth.createUserWithEmailAndPassword(emailVal,passVal);
-
-await userCred.user.sendEmailVerification();
-
-alert("Verification email sent. Check inbox.");
-
-auth.signOut();
-
+show("Verification email sent. Check inbox.");
+}catch(e){ show(e.message); }
 }
 
+// LOGIN
+async function login(){
+try{
+const user=await auth.signInWithEmailAndPassword(
+email.value,password.value
+);
+
+if(!user.user.emailVerified){
+show("Verify your email first.");
+auth.signOut();
+return;
+}
+
+// SUCCESS → go to app
+location="employee.html";
+
+}catch(e){ show(e.message); }
+}
+
+// AUTO LOGIN (if already signed in)
+auth.onAuthStateChanged(user=>{
+if(user && user.emailVerified){
+location="employee.html";
+}
+});
 </script>
 
 </body>
